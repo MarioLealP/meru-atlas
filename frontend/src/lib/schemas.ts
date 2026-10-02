@@ -3,7 +3,8 @@
 // malformed response becomes a clear error instead of a broken map.
 import { z } from "zod";
 
-export const Link = z.object({ title: z.string(), url: z.url() });
+// http(s) only: a link is rendered as <a href>, never a javascript:/data: URL
+export const Link = z.object({ title: z.string(), url: z.url({ protocol: /^https?$/ }) });
 
 export const Node = z.object({
   id: z.string(),
@@ -58,3 +59,43 @@ export const Graph = z.object({
   warnings: z.array(z.string()).optional(),
 });
 export type Graph = z.infer<typeof Graph>;
+
+// Live status (status.schema.json): runtime data written every minute by the host collector.
+const Container = z.object({
+  state: z.string(),
+  health: z.string().optional(),
+  restarts: z.number().int().optional(),
+  uptime: z.number().int().optional(),
+  image: z.string().optional(),
+});
+const Problem = z.object({
+  name: z.string(),
+  severity: z.number().int().min(0).max(5),
+  since: z.number().int(),
+  host: z.string().optional(),
+  hostid: z.string().optional(),
+});
+const Timer = z.object({ result: z.string().optional(), at: z.number().int().optional() });
+export const Status = z.object({
+  generated: z.number().int(),
+  containers: z.record(z.string(), Container),
+  problems: z.array(Problem),
+  errors: z.array(z.string()),
+  bans: z
+    .array(z.object({ ip: z.string(), since: z.string().optional(), why: z.string().optional() }))
+    .optional(),
+  trivy: z
+    .record(z.string(), z.object({ c: z.number().int().optional(), h: z.number().int().optional() }))
+    .optional(),
+  trivy_at: z.number().int().optional(),
+  deploy: z.record(z.string(), z.unknown()).optional(),
+  headscale: z
+    .object({ online: z.number().int().optional(), total: z.number().int().optional() })
+    .loose()
+    .optional(),
+  wazuh: z.array(z.record(z.string(), z.unknown())).optional(),
+  timers: z.record(z.string(), Timer).optional(),
+});
+export type Status = z.infer<typeof Status>;
+export type Problem = z.infer<typeof Problem>;
+export type Container = z.infer<typeof Container>;

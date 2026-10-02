@@ -154,3 +154,22 @@ describe("busy units", () => {
         for (const s of segs[i]!) for (const t of segs[j]!) expect(overlap(s, t)).toBe(0);
   });
 });
+
+describe("direction", () => {
+  it("every routed line starts at its source box (the trace pulse relies on it)", () => {
+    const rects = [
+      { id: "a", x: 0, y: 0, w: 100, h: 50 },
+      { id: "b", x: 400, y: 300, w: 100, h: 50 },
+    ];
+    const inside = (p: { x: number; y: number }, r: (typeof rects)[number]) =>
+      p.x >= r.x && p.x <= r.x + r.w && p.y >= r.y && p.y <= r.y + r.h;
+    for (const r of routeAll(rects, [
+      { id: "ab", from: "a", to: "b" },
+      { id: "ba", from: "b", to: "a" },
+    ])) {
+      const [src, dst] = r.id === "ab" ? [rects[0]!, rects[1]!] : [rects[1]!, rects[0]!];
+      expect(inside(r.points[0]!, src)).toBe(true);
+      expect(inside(r.points.at(-1)!, dst)).toBe(true);
+    }
+  });
+});
