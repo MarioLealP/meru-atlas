@@ -76,6 +76,14 @@
     ui.cardOpen = !!id;
     writeHash(id ? { unit: id } : {});
   }
+  /** A tap on a box: the 1st selects it (its lines, the rest dimmed), the 2nd opens the card. */
+  function tap(id: string | null) {
+    if (id && id === ui.selected && !ui.trace && !ui.traceFrom) ui.cardOpen = true;
+    else {
+      pick(id);
+      if (id && !ui.trace) ui.cardOpen = false;
+    }
+  }
   /** Pick from a list (search, peers, catalogue): switch to the map and move the view there. */
   function go(id: string) {
     ui.view = "map";
@@ -150,7 +158,7 @@
 <main class="fixed inset-0 overflow-hidden">
   {#if model && scene}
     <!-- a tap on a box never moves or zooms the map (Mario, 2026-10-02); only list picks fly -->
-    <Map {model} layout={scene.layout} paths={scene.paths} {liveBy} onpick={pick} bind:api />
+    <Map {model} layout={scene.layout} paths={scene.paths} {liveBy} onpick={tap} bind:api />
     {#if ui.view === "list"}<Catalogue {model} {liveBy} onshow={go} />{/if}
     {#if !stopWall}
       <Toolbar bind:this={toolbar} {model} onpick={go} onfit={home} onview={setView} onwall={toggleWall} />
