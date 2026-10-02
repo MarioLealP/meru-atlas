@@ -20,3 +20,7 @@ class Settings(BaseSettings):
     dev_mode: bool = False
     # the built frontend (the Dockerfile sets /app/web); unset = API only (dev uses Vite)
     web_dir: Path | None = None
+    # /api/events: how often to check the files, keep-alive gap, max connection lifetime (s)
+    events_poll_s: float = 2.0
+    events_keepalive_s: float = 25.0
+    events_max_s: float = 900.0

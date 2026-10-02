@@ -140,15 +140,21 @@
     else if (e.key === "-") api?.zoomBy(0.8);
   }
 
+  /** Load (or, on a graph event, reload) the lab. The view and the hash selection survive. */
+  async function loadGraph() {
+    try {
+      const m = new Model(await getValidated("/api/graph", Graph));
+      const s = await buildScene(m);
+      [model, scene, error] = [m, s, null];
+      queueMicrotask(applyHash);
+    } catch (e) {
+      error = (e as Error).message;
+    }
+  }
+
   onMount(() => {
-    getValidated("/api/graph", Graph)
-      .then(async (g) => {
-        model = new Model(g);
-        scene = await buildScene(model);
-        queueMicrotask(applyHash);
-      })
-      .catch((e: Error) => (error = e.message));
-    live.start();
+    void loadGraph();
+    live.start(() => void loadGraph());
     return () => live.stop();
   });
 </script>
