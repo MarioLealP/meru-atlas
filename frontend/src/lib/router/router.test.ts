@@ -128,3 +128,12 @@ describe("routeAll", () => {
     console.log(`dense map: ${out.length} edges in ${ms.toFixed(0)} ms`);
   });
 });
+
+describe("obstacles", () => {
+  it("keeps lines out of extra obstacles", () => {
+    const bar = box("bar", 120, -40, 160, 30);
+    const [r] = routeAll([box("a", 0, 0), box("b", 300, 0)], [{ id: "e", from: "a", to: "b" }], {}, [bar]);
+    expect(r!.ok).toBe(true);
+    for (const s of segments(r!)) expect(hitsBox(s, bar)).toBe(false);
+  });
+});

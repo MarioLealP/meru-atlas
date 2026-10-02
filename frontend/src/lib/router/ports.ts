@@ -5,10 +5,19 @@ export type Port = { pt: Pt; side: Side };
 const cx = (r: Rect) => r.x + r.w / 2;
 const cy = (r: Rect) => r.y + r.h / 2;
 
-/** Which side of `a` faces `b`: horizontal unless the boxes overlap horizontally. */
+/**
+ * Which side of `a` a line to `b` uses.
+ * - different columns: the side facing `b`;
+ * - same column, directly stacked (gap smaller than a box): top/bottom, a straight drop;
+ * - same column, further apart: the RIGHT side for both ends, so the line runs down the
+ *   channel between columns instead of threading between the stacked boxes (that made
+ *   comb- and box-shaped detours, Mario 2026-10-02 "weird squares").
+ */
 export function facing(a: Rect, b: Rect): Side {
   const overlapX = a.x < b.x + b.w && b.x < a.x + a.w;
   if (!overlapX) return cx(b) > cx(a) ? "right" : "left";
+  const gap = Math.max(b.y - (a.y + a.h), a.y - (b.y + b.h));
+  if (gap > Math.min(a.h, b.h)) return "right";
   return cy(b) > cy(a) ? "bottom" : "top";
 }
 

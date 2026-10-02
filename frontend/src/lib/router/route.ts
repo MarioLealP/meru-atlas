@@ -12,7 +12,13 @@ const NORMAL: Record<Port["side"], [number, number]> = {
 const DIR: Record<Port["side"], number> = { right: 0, left: 1, bottom: 2, top: 3 }; // matches astar DX/DY
 
 /** Route every edge orthogonally around the boxes. Deterministic for the same input. */
-export function routeAll(rects: Rect[], edges: EdgeReq[], opts: Partial<RouterOptions> = {}): Routed[] {
+/** `obstacles`: extra no-go areas that aren't line endpoints (e.g. zone title bars). */
+export function routeAll(
+  rects: Rect[],
+  edges: EdgeReq[],
+  opts: Partial<RouterOptions> = {},
+  obstacles: Rect[] = [],
+): Routed[] {
   const o = { ...DEFAULTS, ...opts };
   const boxes = new Map(rects.map((r) => [r.id, r]));
   const valid = edges.filter((e) => boxes.has(e.from) && boxes.has(e.to) && e.from !== e.to);
@@ -23,6 +29,7 @@ export function routeAll(rects: Rect[], edges: EdgeReq[], opts: Partial<RouterOp
     y2 = Math.max(...rects.map((r) => r.y + r.h)) + pad;
   const g = new Grid({ x: x1, y: y1, w: x2 - x1, h: y2 - y1 }, o.cell);
   rects.forEach((r) => g.block(r, o.margin));
+  obstacles.forEach((r) => g.block(r, 0));
   const ports = assignPorts(boxes, valid, o.cell);
 
   // short edges first: they have the fewest options, long ones can detour around them

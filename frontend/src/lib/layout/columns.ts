@@ -18,6 +18,10 @@ export const GEO = {
 export type ZoneBox = { id: string; title: string; x: number; y: number; w: number; h: number };
 export type Layout = { nodes: Map<string, Rect>; zones: ZoneBox[]; width: number; height: number };
 
+/** Zone title bars as router obstacles: lines never run across a zone's name. */
+export const titleBars = (l: Layout): Rect[] =>
+  l.zones.map((z) => ({ id: `band:${z.id}`, x: z.x, y: z.y, w: z.w, h: GEO.band - GEO.grid }));
+
 const snap = (v: number) => Math.round(v / GEO.grid) * GEO.grid;
 
 export function layoutColumns(g: Graph): Layout {
