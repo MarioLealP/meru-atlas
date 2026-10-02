@@ -1,0 +1,23 @@
+@import "tailwindcss";
+
+/* Endfield design tokens (from the v0 atlas). Dark is the primary theme. */
+@theme {
+  --color-signal: #f2c300;
+  --color-ink: #e7e6e1;
+  --color-muted: #9a9ea6;
+  --color-panel: #1b1d20;
+  --color-bg: #131416;
+  --color-line: #33363b;
+  --color-ok: #6fcf8a;
+  --color-danger: #ff6b5f;
+  --font-display: "Barlow Condensed", "Arial Narrow", sans-serif;
+  --font-body: "Barlow", "Segoe UI", system-ui, sans-serif;
+  --font-mono: "JetBrains Mono", ui-monospace, monospace;
+}
+
+html,
+body {
+  background: var(--color-bg);
+  color: var(--color-ink);
+  font-family: var(--font-body);
+}

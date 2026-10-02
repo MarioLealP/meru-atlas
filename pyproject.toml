@@ -1,0 +1,30 @@
+[project]
+name = "clockmost-atlas"
+version = "0.1.0"
+description = "clockmost atlas: the live, repo-generated map and home page of the lab"
+requires-python = ">=3.13"
+license = "MIT"
+
+[tool.uv.workspace]
+members = ["packages/generator", "packages/api"]
+
+[tool.uv.sources]
+atlas-gen = { workspace = true }
+atlas-api = { workspace = true }
+
+[dependency-groups]
+dev = ["ruff>=0.16", "pytest>=9.1", "httpx2"]
+
+[tool.ruff]
+line-length = 110
+target-version = "py313"
+
+[tool.ruff.lint]
+select = ["E", "F", "W", "I", "B", "UP", "S", "SIM", "RUF"]
+ignore = ["S101"]  # asserts are fine in tests
+
+[tool.pytest.ini_options]
+testpaths = ["packages/generator/tests", "packages/api/tests"]
+
+[tool.ruff.lint.isort]
+known-first-party = ["atlas_gen", "atlas_api"]

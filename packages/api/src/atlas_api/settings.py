@@ -1,0 +1,20 @@
+"""Runtime configuration. Read ONLY here, from the environment / .env (pydantic-settings).
+
+Secrets (none needed in v1) must be SecretStr fields here, so they never reach logs,
+responses or the frontend. See the repo README "Secrets".
+"""
+
+from pathlib import Path
+
+from pydantic_settings import BaseSettings, SettingsConfigDict
+
+
+class Settings(BaseSettings):
+    model_config = SettingsConfigDict(env_prefix="ATLAS_", env_file=".env", extra="ignore")
+
+    graph_file: Path = Path("/data/graph.json")
+    status_file: Path = Path("/data/live/status.json")
+    # Caddy's forward-auth injects this header after SSO; requests without it are
+    # refused (fail closed if a route ever bypasses the gate). Dev mode skips it.
+    identity_header: str = "X-Authentik-Username"
+    dev_mode: bool = False

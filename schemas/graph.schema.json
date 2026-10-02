@@ -1,0 +1,94 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://atlas.clockmost.com/schemas/graph.schema.json",
+  "title": "clockmost atlas graph",
+  "description": "The structure of the lab, generated from the infra repo + overlay.yaml by atlas_gen. Contains no layout coordinates (the frontend lays it out with ELK) and never any secret.",
+  "type": "object",
+  "required": ["schema_version", "zones", "nodes", "edges"],
+  "additionalProperties": false,
+  "properties": {
+    "schema_version": { "const": 1 },
+    "source": {
+      "type": "object",
+      "description": "Where this graph came from (informational).",
+      "additionalProperties": false,
+      "properties": {
+        "repo": { "type": "string" },
+        "commit": { "type": "string", "pattern": "^[0-9a-f]{7,40}$" }
+      }
+    },
+    "router_forwards": {
+      "type": "array",
+      "items": {
+        "type": "object", "additionalProperties": false, "required": ["proto", "port", "target"],
+        "properties": {
+          "proto": { "enum": ["tcp", "udp"] },
+          "port": { "type": "integer", "minimum": 1, "maximum": 65535 },
+          "target": { "type": "string" }
+        }
+      }
+    },
+    "zones": {
+      "type": "array", "minItems": 1,
+      "items": {
+        "type": "object", "additionalProperties": false, "required": ["id", "title"],
+        "properties": {
+          "id": { "$ref": "#/$defs/id" },
+          "title": { "type": "string" },
+          "order": { "type": "integer", "description": "left-to-right column order" },
+          "strip": { "type": "boolean", "description": "full-width strip below the columns (platform)" }
+        }
+      }
+    },
+    "nodes": { "type": "array", "items": { "$ref": "#/$defs/node" } },
+    "edges": { "type": "array", "items": { "$ref": "#/$defs/edge" } },
+    "warnings": { "type": "array", "items": { "type": "string" } }
+  },
+  "$defs": {
+    "id": { "type": "string", "pattern": "^[a-z0-9][a-z0-9-]*$" },
+    "node": {
+      "type": "object", "additionalProperties": false,
+      "required": ["id", "label", "zone"],
+      "properties": {
+        "id": { "$ref": "#/$defs/id" },
+        "label": { "type": "string" },
+        "sub": { "type": "string" },
+        "zone": { "$ref": "#/$defs/id" },
+        "rank": { "type": "integer", "description": "ordering hint inside the zone (overlay row)" },
+        "icon": { "type": "string", "description": "icon file name in the app's icon set" },
+        "does": { "type": "string" },
+        "about": { "type": "string" },
+        "flag": { "enum": ["", "warn", "off"] },
+        "login_note": { "type": "string" },
+        "links": {
+          "type": "array",
+          "items": {
+            "type": "object", "additionalProperties": false, "required": ["title", "url"],
+            "properties": { "title": { "type": "string" }, "url": { "type": "string", "format": "uri" } }
+          }
+        },
+        "containers": { "type": "array", "items": { "type": "string" } },
+        "project": { "type": "string" },
+        "version": { "type": "string" },
+        "ports": { "type": "array", "items": { "type": "string" } },
+        "networks": { "type": "array", "items": { "type": "string" } },
+        "public": { "type": "boolean" },
+        "zabbix_hostid": { "type": "string", "pattern": "^[0-9]*$" },
+        "facts": {
+          "type": "array",
+          "items": { "type": "array", "prefixItems": [{ "type": "string" }, { "type": "string" }], "minItems": 2, "maxItems": 2 }
+        }
+      }
+    },
+    "edge": {
+      "type": "object", "additionalProperties": false,
+      "required": ["from", "to", "kind"],
+      "properties": {
+        "from": { "$ref": "#/$defs/id" },
+        "to": { "$ref": "#/$defs/id" },
+        "kind": { "enum": ["traffic", "route", "sso", "data", "watch", "alert", "ship", "backup"] },
+        "label": { "type": "string" }
+      }
+    }
+  }
+}

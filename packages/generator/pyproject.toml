@@ -1,0 +1,13 @@
+[project]
+name = "atlas-gen"
+version = "0.1.0"
+description = "Generates graph.json from the clockmost infra repo + overlay.yaml"
+requires-python = ">=3.13"
+dependencies = ["pyyaml>=6.0", "jsonschema>=4.26"]
+
+[project.scripts]
+atlas-gen = "atlas_gen.cli:main"
+
+[build-system]
+requires = ["uv_build>=0.12,<0.13"]
+build-backend = "uv_build"
