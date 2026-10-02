@@ -107,7 +107,10 @@ function spill(boxes: Map<string, Rect>, slots: Map<string, SlotT[]>, step: numb
       const cap = capacity(r, side, step);
       if (list.length <= cap) continue;
       const vertical = side === "left" || side === "right";
-      list.sort((p, q) => (vertical ? cy(p.other) - cy(q.other) : cx(p.other) - cx(q.other)) || (p.edge < q.edge ? -1 : 1));
+      list.sort(
+        (p, q) =>
+          (vertical ? cy(p.other) - cy(q.other) : cx(p.other) - cx(q.other)) || (p.edge < q.edge ? -1 : 1),
+      );
       const extra = list.length - cap;
       const first = list.splice(0, Math.ceil(extra / 2));
       const last = list.splice(list.length - Math.floor(extra / 2));

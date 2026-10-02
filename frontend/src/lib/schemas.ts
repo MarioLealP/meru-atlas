@@ -42,8 +42,16 @@ export const Zone = z.object({
   strip: z.boolean().optional(),
 });
 
+export const RouterForward = z.object({
+  proto: z.enum(["tcp", "udp"]),
+  port: z.number().int(),
+  target: z.string(),
+});
+
 export const Graph = z.object({
   schema_version: z.literal(1),
+  source: z.object({ repo: z.string().optional(), commit: z.string().optional() }).optional(),
+  router_forwards: z.array(RouterForward).optional(),
   zones: z.array(Zone),
   nodes: z.array(Node),
   edges: z.array(Edge),
