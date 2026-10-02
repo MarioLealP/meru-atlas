@@ -16,11 +16,11 @@
   import { isNarrow, overview } from "./lib/view/overview";
   import { TOP_BAR, type Inset, type panzoom } from "./lib/view/panzoom";
   import { boundsOf } from "./lib/view/bounds";
-  import { buildScene } from "./lib/view/scene";
+  import { layoutScene, routeScene, type Scene } from "./lib/view/scene";
   import { wallList, wallTour } from "./lib/view/wall";
 
   let model = $state<Model | null>(null);
-  let scene = $state<Awaited<ReturnType<typeof buildScene>> | null>(null);
+  let scene = $state.raw<Scene | null>(null); // replaced whole, never mutated: no deep proxy
   let error = $state<string | null>(null);
   let api = $state<ReturnType<typeof panzoom>>();
   let toolbar = $state<{ focusSearch: () => void }>();
@@ -152,9 +152,11 @@
   async function loadGraph() {
     try {
       const m = new Model(await getValidated("/api/graph", Graph));
-      const s = await buildScene(m);
+      const s = layoutScene(m); // boxes paint now; lines follow from the worker
       [model, scene, error] = [m, s, null];
       queueMicrotask(applyHash);
+      const lines = await routeScene(m, s.layout);
+      if (scene?.layout === s.layout) scene = { ...s, ...lines }; // unless a newer graph won
     } catch (e) {
       error = (e as Error).message;
     }

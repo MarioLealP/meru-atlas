@@ -1,11 +1,15 @@
-// Layout + routing for a graph: boxes from the column layout, every line routed once (in a
-// worker), stored as SVG path strings by edge index.
+// Layout + routing for a graph, in two steps so the boxes paint at once: the column layout
+// is synchronous and cheap; the lines are routed in a worker and arrive a moment later
+// (they only show on demand anyway). Paths are SVG strings by edge index.
 import type { Model } from "../graph/model";
-import type { Pt } from "../router";
 import { layoutColumns, titleBars, type Layout } from "../layout/columns";
+import type { Pt } from "../router";
 import { routeInWorker } from "../router/client";
 import type { RouteJob } from "../router/worker";
 import { roundedPath } from "./path";
+
+export type Lines = { paths: Map<number, string>; points: Map<number, Pt[]> };
+export type Scene = { layout: Layout } & Lines;
 
 export function routeJob(m: Model, l: Layout): RouteJob {
   return {
@@ -17,21 +21,21 @@ export function routeJob(m: Model, l: Layout): RouteJob {
   };
 }
 
-export async function buildScene(m: Model): Promise<{
-  layout: Layout;
-  paths: Map<number, string>;
-  points: Map<number, Pt[]>;
-  unrouted: number;
-  ms: number;
-}> {
-  const layout = layoutColumns(m.g);
-  const { routed, ms } = await routeInWorker(routeJob(m, layout));
-  const paths = new Map<number, string>();
-  const points = new Map<number, Pt[]>();
+/** The boxes, now; no lines yet. */
+export const layoutScene = (m: Model): Scene => ({
+  layout: layoutColumns(m.g),
+  paths: new Map(),
+  points: new Map(),
+});
+
+/** Every line, routed off the main thread. */
+export async function routeScene(m: Model, layout: Layout): Promise<Lines> {
+  const { routed } = await routeInWorker(routeJob(m, layout));
+  const lines: Lines = { paths: new Map(), points: new Map() };
   for (const r of routed)
     if (r.ok) {
-      paths.set(Number(r.id), roundedPath(r.points));
-      points.set(Number(r.id), r.points);
+      lines.paths.set(Number(r.id), roundedPath(r.points));
+      lines.points.set(Number(r.id), r.points);
     }
-  return { layout, paths, points, unrouted: routed.filter((r) => !r.ok).length, ms };
+  return lines;
 }
