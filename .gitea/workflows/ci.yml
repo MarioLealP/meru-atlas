@@ -7,9 +7,12 @@ on:
 jobs:
   python:
     runs-on: ubuntu-latest
-    container: { image: "ghcr.io/astral-sh/uv:python3.13-trixie-slim" }
+    # needs node for the JS actions (checkout, setup-uv): the uv image has none
+    container: { image: "catthehacker/ubuntu:act-latest" }
     steps:
       - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v6
+        with: { python-version: "3.13" }
       - run: uv sync --frozen --all-packages
       - run: uv run ruff format --check .
       - run: uv run ruff check .
