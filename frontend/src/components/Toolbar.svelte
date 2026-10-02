@@ -127,10 +127,24 @@
       <button
         class={["ef-pill", ui.lens === "exposure" && "border-crit text-crit"]}
         aria-pressed={ui.lens === "exposure"}
-        onclick={() => (ui.lens = ui.lens === "exposure" ? null : "exposure")}
+        onclick={() => {
+          ui.lens = ui.lens === "exposure" ? null : "exposure";
+          ui.net = null;
+        }}
         title="What the internet can reach (e)"
       >
         Exposure
+      </button>
+      <button
+        class={["ef-pill", ui.lens === "networks" && "border-accent text-accent"]}
+        aria-pressed={ui.lens === "networks"}
+        onclick={() => {
+          ui.lens = ui.lens === "networks" ? null : "networks";
+          ui.net = null;
+        }}
+        title="Which units share a Docker network (n)"
+      >
+        Networks
       </button>
       <button class="ef-pill" onclick={onfit} title="Fit the map (f)">Fit</button>
       <button class="ef-pill hidden lg:inline-flex" onclick={onwall} title="Wall mode (w)">Wall</button>

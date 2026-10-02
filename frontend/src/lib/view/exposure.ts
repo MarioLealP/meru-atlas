@@ -5,7 +5,9 @@
 import type { Model } from "../graph/model";
 
 export const ORIGIN = "internet";
-export type Exposure = { targets: string[]; lit: Set<string>; edges: number[]; why: Map<string, string> };
+/** What any lens hands the map: units to light, lines to draw, an optional word per unit. */
+export type Lens = { lit: Set<string>; edges: number[]; why?: Map<string, string> };
+export type Exposure = Lens & { targets: string[]; why: Map<string, string> };
 
 export function exposure(m: Model): Exposure {
   const forwards = new Map<string, string[]>();

@@ -27,7 +27,8 @@ class UiState {
   trace = $state<{ path: string[]; edges: number[] } | null>(null);
   traceFrom = $state<string | null>(null); // "route from here to…" waiting for a target
   view = $state<"map" | "list">("map"); // the map, or the unit catalogue
-  lens = $state<"exposure" | null>(null); // phase 6 lenses: a whole-map question answered
+  lens = $state<"exposure" | "networks" | null>(null); // phase 6 lenses: a whole-map question
+  net = $state<string | null>(null); // the network the networks lens shows
   allLines = $state(stored("atlas.alllines", false));
   layers = $state<Record<Kind, boolean>>(
     Object.fromEntries(KINDS.map(([k]) => [k, true])) as Record<Kind, boolean>,

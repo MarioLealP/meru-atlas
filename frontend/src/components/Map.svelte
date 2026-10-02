@@ -4,7 +4,7 @@
   import type { Layout } from "../lib/layout/columns";
   import type { UnitLive } from "../lib/live/health";
   import { ui } from "../lib/state.svelte";
-  import type { Exposure } from "../lib/view/exposure";
+  import type { Lens } from "../lib/view/exposure";
   import { overview } from "../lib/view/overview";
   import { panzoom, type View } from "../lib/view/panzoom";
   import { visible } from "../lib/view/visible";
@@ -25,7 +25,7 @@
     layout: Layout;
     paths: Map<number, string>;
     liveBy: Map<string, UnitLive>;
-    lens?: Exposure | null;
+    lens?: Lens | null;
     onpick: (id: string | null) => void;
     api?: ReturnType<typeof panzoom>;
   } = $props();
@@ -70,7 +70,7 @@
         n={model.nodes.get(id)!}
         {b}
         live={liveBy.get(id)}
-        tag={lens?.why.get(id)}
+        tag={lens?.why?.get(id)}
         dim={!!vis.lit && !vis.lit.has(id)}
         active={ui.selected === id || ui.traceFrom === id}
         onpick={pick}
