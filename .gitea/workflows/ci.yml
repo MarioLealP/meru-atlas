@@ -69,5 +69,6 @@ jobs:
           INFRA_DEPLOY_KEY: ${{ secrets.INFRA_DEPLOY_KEY }}
           INFRA_REPO_URL: ${{ secrets.INFRA_REPO_URL }}
           INFRA_KNOWN_HOSTS: ${{ secrets.INFRA_KNOWN_HOSTS }}
+          NTFY_TOKEN: ${{ secrets.NTFY_TOKEN }}
           COMMIT_MSG: ${{ github.event.head_commit.message }}
         run: curl -fsSL https://git.clockmost.com/Benylin/ci-workflows/raw/branch/main/deploy.sh | bash -s -- atlas
