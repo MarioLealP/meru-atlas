@@ -67,7 +67,6 @@
       ui.traceFrom = null;
       ui.selected = t ? id : null;
       ui.cardOpen = false;
-      frame();
       return;
     }
     ui.trace = null;
@@ -150,15 +149,8 @@
 
 <main class="fixed inset-0 overflow-hidden">
   {#if model && scene}
-    <!-- on a phone a tap also frames the unit, else the bottom sheet could cover it -->
-    <Map
-      {model}
-      layout={scene.layout}
-      paths={scene.paths}
-      {liveBy}
-      onpick={(id) => (id && isNarrow() ? go(id) : pick(id))}
-      bind:api
-    />
+    <!-- a tap on a box never moves or zooms the map (Mario, 2026-10-02); only list picks fly -->
+    <Map {model} layout={scene.layout} paths={scene.paths} {liveBy} onpick={pick} bind:api />
     {#if ui.view === "list"}<Catalogue {model} {liveBy} onshow={go} />{/if}
     {#if !stopWall}
       <Toolbar bind:this={toolbar} {model} onpick={go} onfit={home} onview={setView} onwall={toggleWall} />
