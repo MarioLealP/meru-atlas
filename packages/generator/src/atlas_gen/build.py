@@ -45,12 +45,13 @@ def build(repo: Path, overlay_path: Path | None = None, with_commit: bool = Fals
         rts = [r for r in routes if j.owner.get(r.target_host) == n["id"]]
         nets = sorted({x for c in own for x in c.networks})
         ports = sorted({p for c in own for p in c.ports})
-        facts = []
+        facts, web = [], []
         if own:
             facts.append(["Runs", "; ".join(f"{c.name} ({c.image.split('@')[0]})" for c in own)])
         for r in rts:
-            reach = "public (tunnel)" if r.host in public else "LAN/VPN only"
-            facts.append(["URL", f"{r.host} · {login(r, sso)} · {reach}"])
+            how, pub = login(r, sso), r.host in public
+            facts.append(["URL", f"{r.host} · {how} · {'public (tunnel)' if pub else 'LAN/VPN only'}"])
+            web.append({"host": r.host, "login": how, "sso": how != "no SSO", "public": pub})
         if nets:
             facts.append(["Networks", ", ".join(nets)])
         if ports:
@@ -81,6 +82,8 @@ def build(repo: Path, overlay_path: Path | None = None, with_commit: bool = Fals
         if nets:
             node["networks"] = nets
         node["public"] = any(r.host in public for r in rts)
+        if web:
+            node["routes"] = web
         if hostid := str(n.get("zabbix_host") or (o.zabbix_server_hostid if own else "")):
             node["zabbix_hostid"] = hostid
         if facts:

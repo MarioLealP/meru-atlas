@@ -32,6 +32,8 @@ def test_node_facts_from_repo():
     assert web["zabbix_hostid"] == "10780"
     assert {lk["url"] for lk in web["links"]} == {"https://web.clockmost.com/", "https://api.clockmost.com/"}
     assert ["URL", "web.clockmost.com · SSO gate · public (tunnel)"] in web["facts"]
+    route = {"host": "web.clockmost.com", "login": "SSO gate", "sso": True, "public": True}
+    assert route in web["routes"]
 
 
 def test_unclaimed_container_and_route_go_to_unsorted():

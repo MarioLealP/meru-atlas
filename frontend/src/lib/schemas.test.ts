@@ -1,8 +1,9 @@
 // Keep the zod schemas and the JSON Schemas (schemas/*.schema.json) in step: the generator
-// fixtures must parse, and every top-level JSON Schema property must exist in zod.
+// fixtures must parse, and every JSON Schema property must exist in zod (zod strips unknown
+// keys silently, so a field missing here would just vanish in the browser).
 import { readFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
-import { Graph, Status } from "./schemas";
+import { Graph, Node, Status } from "./schemas";
 
 const read = (p: string) => JSON.parse(readFileSync(new URL(`../../../${p}`, import.meta.url), "utf8"));
 const FIX = "packages/generator/tests/fixtures";
@@ -18,4 +19,10 @@ describe.each([
     const zodKeys = Object.keys(zod.shape);
     for (const k of Object.keys(json.properties)) expect(zodKeys).toContain(k);
   });
+});
+
+it("covers every node property of the graph JSON Schema", () => {
+  const json = read("schemas/graph.schema.json");
+  const zodKeys = Object.keys(Node.shape);
+  for (const k of Object.keys(json.$defs.node.properties)) expect(zodKeys).toContain(k);
 });

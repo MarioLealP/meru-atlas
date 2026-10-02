@@ -26,6 +26,7 @@ class UiState {
   hover = $state<string | null>(null);
   trace = $state<{ path: string[]; edges: number[] } | null>(null);
   traceFrom = $state<string | null>(null); // "route from here to…" waiting for a target
+  view = $state<"map" | "list">("map"); // the map, or the unit catalogue
   allLines = $state(stored("atlas.alllines", false));
   layers = $state<Record<Kind, boolean>>(
     Object.fromEntries(KINDS.map(([k]) => [k, true])) as Record<Kind, boolean>,

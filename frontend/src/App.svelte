@@ -1,6 +1,7 @@
 <script lang="ts">
   import { onMount } from "svelte";
   import Card from "./components/Card.svelte";
+  import Catalogue from "./components/Catalogue.svelte";
   import Map from "./components/Map.svelte";
   import RouteBar from "./components/RouteBar.svelte";
   import Toolbar from "./components/Toolbar.svelte";
@@ -75,8 +76,17 @@
     ui.cardOpen = !!id;
     writeHash(id ? { unit: id } : {});
   }
-  /** Pick from a list (search, peers): also move the view there. */
-  const go = (id: string) => (pick(id), frame());
+  /** Pick from a list (search, peers, catalogue): switch to the map and move the view there. */
+  function go(id: string) {
+    ui.view = "map";
+    pick(id);
+    frame();
+  }
+  function setView(v: "map" | "list") {
+    if (v === "list") pick(null);
+    ui.view = v;
+    writeHash(v === "list" ? { list: true } : {});
+  }
   function startTrace(from: string) {
     ui.trace = null;
     ui.traceFrom = from;
@@ -85,7 +95,8 @@
   function applyHash() {
     if (!model) return;
     const d = readHash();
-    if (d.route && model.nodes.has(d.route[0]) && model.nodes.has(d.route[1])) {
+    if (d.list) setView("list");
+    else if (d.route && model.nodes.has(d.route[0]) && model.nodes.has(d.route[1])) {
       ui.traceFrom = d.route[0];
       pick(d.route[1]);
     } else if (d.unit && model.nodes.has(d.unit)) {
@@ -130,8 +141,9 @@
       onpick={(id) => (id && isNarrow() ? go(id) : pick(id))}
       bind:api
     />
-    <Toolbar bind:this={toolbar} {model} onpick={go} onfit={home} />
-    {#if ui.selected && ui.cardOpen}
+    {#if ui.view === "list"}<Catalogue {model} {liveBy} onshow={go} />{/if}
+    <Toolbar bind:this={toolbar} {model} onpick={go} onfit={home} onview={setView} />
+    {#if ui.view === "map" && ui.selected && ui.cardOpen}
       <Card
         {model}
         id={ui.selected}

@@ -5,7 +5,17 @@
   import { KINDS, ui } from "../lib/state.svelte";
   import { KIND_COLOR } from "../lib/view/kinds";
 
-  let { model, onpick, onfit }: { model: Model; onpick: (id: string) => void; onfit: () => void } = $props();
+  let {
+    model,
+    onpick,
+    onfit,
+    onview,
+  }: {
+    model: Model;
+    onpick: (id: string) => void;
+    onfit: () => void;
+    onview: (v: "map" | "list") => void;
+  } = $props();
 
   let q = $state("");
   let layersOpen = $state(false); // narrow screens: layer chips live in a dropdown
@@ -30,6 +40,10 @@
 
 <header class="bar">
   <div class="brand">CLOCKMOST <span>ATLAS</span></div>
+  <div class="tabs" role="tablist" aria-label="View">
+    <button role="tab" aria-selected={ui.view === "map"} onclick={() => onview("map")}>Map</button>
+    <button role="tab" aria-selected={ui.view === "list"} onclick={() => onview("list")}>Catalogue</button>
+  </div>
 
   <div class="search">
     <input
@@ -53,8 +67,13 @@
     {/if}
   </div>
 
-  <button class="lines-btn" class:on={layersOpen} onclick={() => (layersOpen = !layersOpen)}>Lines</button>
-  <div class="layers" class:open={layersOpen}>
+  <button
+    class="lines-btn"
+    class:on={layersOpen}
+    class:hidden={ui.view !== "map"}
+    onclick={() => (layersOpen = !layersOpen)}>Lines</button
+  >
+  <div class="layers" class:open={layersOpen} class:hidden={ui.view !== "map"}>
     {#each KINDS as [k, label] (k)}
       <button
         class:off={!ui.layers[k]}
@@ -181,6 +200,28 @@
   .lines-btn {
     display: none;
   }
+  .tabs {
+    display: flex;
+  }
+  .tabs button {
+    border: 1px solid var(--color-line);
+    padding: 5px 12px;
+    font: 600 15px var(--font-display);
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--color-muted);
+  }
+  .tabs button + button {
+    border-left: 0;
+  }
+  .tabs button[aria-selected="true"] {
+    background: var(--color-ink);
+    border-color: var(--color-ink);
+    color: var(--color-bg);
+  }
+  .layers.hidden {
+    display: none;
+  }
 
   /* phone / narrow: one row (brand, search, Lines, live dot); chips drop down on demand */
   @media (max-width: 900px) {
@@ -193,8 +234,11 @@
       border-bottom: 1px solid var(--color-line);
     }
     .brand {
-      font-size: 20px;
-      white-space: nowrap;
+      display: none; /* the tabs carry the identity; the row is too narrow for both */
+    }
+    .tabs button {
+      padding: 6px 8px;
+      font-size: 14px;
     }
     .search {
       flex: 1 1 auto;
@@ -211,6 +255,9 @@
     .lines-btn.on {
       border-color: var(--color-signal);
       color: var(--color-signal);
+    }
+    .lines-btn.hidden {
+      display: none;
     }
     .layers {
       display: none;

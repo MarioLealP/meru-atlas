@@ -5,6 +5,9 @@ import { z } from "zod";
 
 // http(s) only: a link is rendered as <a href>, never a javascript:/data: URL
 export const Link = z.object({ title: z.string(), url: z.url({ protocol: /^https?$/ }) });
+export type Link = z.infer<typeof Link>;
+
+export const Route = z.object({ host: z.string(), login: z.string(), sso: z.boolean(), public: z.boolean() });
 
 export const Node = z.object({
   id: z.string(),
@@ -24,6 +27,7 @@ export const Node = z.object({
   ports: z.array(z.string()).optional(),
   networks: z.array(z.string()).optional(),
   public: z.boolean().optional(),
+  routes: z.array(Route).optional(),
   zabbix_hostid: z.string().optional(),
   facts: z.array(z.tuple([z.string(), z.string()])).optional(),
 });

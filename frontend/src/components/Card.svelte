@@ -1,4 +1,5 @@
 <script lang="ts">
+  import { actions } from "../lib/graph/actions";
   import type { Model } from "../lib/graph/model";
   import { ago, type UnitLive } from "../lib/live/health";
 
@@ -21,6 +22,18 @@
   const n = $derived(model.nodes.get(id)!);
   const zone = $derived(model.g.zones.find((z) => z.id === n.zone)?.title ?? n.zone);
   const SEV = ["info", "info", "warning", "average", "high", "disaster"];
+  const acts = $derived(actions(n));
+
+  let copied = $state<string | null>(null);
+  async function copy(text: string) {
+    try {
+      await navigator.clipboard.writeText(text);
+      copied = text;
+      setTimeout(() => (copied = null), 1500);
+    } catch {
+      copied = null; // no clipboard permission: the command is still readable in the title
+    }
+  }
 </script>
 
 <aside class="card" aria-label="{n.label} details">
@@ -35,10 +48,15 @@
   {#if n.about}<p class="about">{n.about}</p>{/if}
   {#if n.login_note}<p class="note">{n.login_note}</p>{/if}
 
-  {#if n.links?.length}
+  {#if acts.length}
     <div class="links">
-      {#each n.links as l (l.url)}<a href={l.url} target="_blank" rel="noopener noreferrer">{l.title} ↗</a
-        >{/each}
+      {#each acts as a (a.title)}
+        {#if a.kind === "link"}
+          <a class:primary={a.primary} href={a.url} target="_blank" rel="noopener noreferrer">{a.title} ↗</a>
+        {:else}
+          <button onclick={() => copy(a.text)}>{copied === a.text ? "Copied ✓" : a.title}</button>
+        {/if}
+      {/each}
     </div>
   {/if}
 
@@ -162,13 +180,24 @@
     margin: 12px 0;
   }
   .links a,
+  .links button,
   .peers button,
   .trace {
     border: 1px solid var(--color-line);
     padding: 4px 10px;
     font-size: 14px;
   }
-  .links a:hover,
+  .links a.primary {
+    background: var(--color-signal);
+    border-color: var(--color-signal);
+    color: var(--color-bg);
+    font-weight: 600;
+  }
+  .links button {
+    font: 12px var(--font-mono);
+  }
+  .links a:not(.primary):hover,
+  .links button:hover,
   .peers button:hover,
   .trace:hover {
     border-color: var(--color-signal);

@@ -73,6 +73,17 @@
         "ports": { "type": "array", "items": { "type": "string" } },
         "networks": { "type": "array", "items": { "type": "string" } },
         "public": { "type": "boolean" },
+        "routes": {
+          "description": "Web routes via Caddy to this unit: host, how it logs you in, exposure",
+          "type": "array",
+          "items": {
+            "type": "object", "additionalProperties": false, "required": ["host", "login", "sso", "public"],
+            "properties": {
+              "host": { "type": "string" }, "login": { "type": "string" },
+              "sso": { "type": "boolean" }, "public": { "type": "boolean" }
+            }
+          }
+        },
         "zabbix_hostid": { "type": "string", "pattern": "^[0-9]*$" },
         "facts": {
           "type": "array",
