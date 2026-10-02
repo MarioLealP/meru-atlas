@@ -50,7 +50,14 @@
 </script>
 
 <!-- svelte-ignore a11y_click_events_have_key_events, a11y_no_noninteractive_element_interactions -->
-<svg bind:this={svg} class="map" role="application" aria-label="Clockmost lab map" onclick={background}>
+<!-- panzoom toggles `.dragging` on the svg while a drag is in progress -->
+<svg
+  bind:this={svg}
+  class="absolute inset-0 size-full cursor-grab touch-none select-none [&.dragging]:cursor-grabbing"
+  role="application"
+  aria-label="Clockmost lab map"
+  onclick={background}
+>
   <g transform="translate({view.x},{view.y}) scale({view.k})">
     {#each layout.zones as z (z.id)}<ZoneBox {z} />{/each}
     <Lines edges={vis.edges} {paths} strong={vis.strong} flow={!!ui.trace} />
@@ -67,18 +74,3 @@
     {/each}
   </g>
 </svg>
-
-<style>
-  .map {
-    position: absolute;
-    inset: 0;
-    width: 100%;
-    height: 100%;
-    touch-action: none;
-    user-select: none;
-    cursor: grab;
-  }
-  :global(.map.dragging) {
-    cursor: grabbing;
-  }
-</style>

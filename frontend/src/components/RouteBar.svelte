@@ -16,71 +16,30 @@
   } = $props();
 </script>
 
-<!-- A traced route as tappable steps (fly to a hop, the trace stays), or a "no path" answer. -->
-<div class="bar" class:no={!!notice} role="status">
+<!-- A traced route as tappable steps (fly to a hop, the trace stays), or a "no path" answer.
+     Phone: full width above the safe area; desktop: centred. -->
+<div
+  class={[
+    "ef-panel absolute inset-x-3 bottom-[calc(0.75rem+env(safe-area-inset-bottom))] z-10",
+    "flex flex-wrap items-center gap-x-2 gap-y-1 p-3 font-display text-lg font-semibold",
+    "lg:inset-x-auto lg:bottom-4 lg:left-1/2 lg:max-w-[calc(100vw-2rem)] lg:-translate-x-1/2",
+    notice ? "border-crit" : "border-accent",
+  ]}
+  role="status"
+>
   {#if path}
-    <span class="k">Route</span>
+    <span class="ef-label text-accent">Route</span>
     {#each path as id, i (id)}
-      {#if i}<span class="arrow">→</span>{/if}
-      <button class="step" onclick={() => onstep(id)}>{model.nodes.get(id)?.label ?? id}</button>
+      {#if i}<span class="text-ink-3">→</span>{/if}
+      <button
+        class="border-b border-dashed border-line-2 py-1 hover:border-accent hover:text-accent"
+        onclick={() => onstep(id)}
+      >
+        {model.nodes.get(id)?.label ?? id}
+      </button>
     {/each}
   {:else}
     {notice}
   {/if}
-  <button class="clear" onclick={onclear}>clear</button>
+  <button class="ef-label ml-2 hover:text-ink" onclick={onclear}>clear</button>
 </div>
-
-<style>
-  .bar {
-    position: absolute;
-    bottom: 16px;
-    left: 50%;
-    transform: translateX(-50%);
-    max-width: calc(100vw - 32px);
-    display: flex;
-    flex-wrap: wrap;
-    align-items: center;
-    gap: 4px 6px;
-    background: var(--color-panel);
-    border: 1px solid var(--color-signal);
-    padding: 8px 14px;
-    font: 600 16px var(--font-display);
-    letter-spacing: 0.04em;
-  }
-  .bar.no {
-    border-color: var(--color-danger);
-  }
-  .k {
-    color: var(--color-signal);
-    text-transform: uppercase;
-    font-size: 13px;
-    letter-spacing: 0.14em;
-    margin-right: 4px;
-  }
-  .arrow {
-    color: var(--color-muted);
-  }
-  .step {
-    border-bottom: 1px dashed var(--color-line);
-  }
-  .step:hover {
-    color: var(--color-signal);
-    border-color: var(--color-signal);
-  }
-  .clear {
-    margin-left: 8px;
-    color: var(--color-muted);
-    font: 12px var(--font-mono);
-  }
-  @media (max-width: 900px) {
-    .bar {
-      left: 12px;
-      right: 12px;
-      transform: none;
-      bottom: calc(12px + env(safe-area-inset-bottom));
-    }
-    .step {
-      padding: 4px 0; /* bigger tap target */
-    }
-  }
-</style>

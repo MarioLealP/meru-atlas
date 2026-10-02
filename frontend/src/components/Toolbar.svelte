@@ -3,22 +3,24 @@
   import { ago, isStale } from "../lib/live/health";
   import { live } from "../lib/live/poll.svelte";
   import { KINDS, ui } from "../lib/state.svelte";
-  import { KIND_COLOR } from "../lib/view/kinds";
+  import { KIND_BG } from "../lib/view/kinds";
 
   let {
     model,
     onpick,
     onfit,
     onview,
+    onwall,
   }: {
     model: Model;
     onpick: (id: string) => void;
     onfit: () => void;
     onview: (v: "map" | "list") => void;
+    onwall: () => void;
   } = $props();
 
   let q = $state("");
-  let layersOpen = $state(false); // narrow screens: layer chips live in a dropdown
+  let layersOpen = $state(false); // phone: the line chips drop down on demand
   let input: HTMLInputElement;
   const hits = $derived(
     q.trim()
@@ -36,17 +38,32 @@
   };
   export const focusSearch = () => input.focus();
   const bad = $derived(live.data ? live.data.problems.filter((p) => p.severity >= 4).length : 0);
+  const liveState = $derived(!live.data || isStale(live.data) || live.error ? "crit" : bad ? "warn" : "ok");
+  const onMap = $derived(ui.view === "map");
 </script>
 
-<header class="bar">
-  <div class="brand">CLOCKMOST <span>ATLAS</span></div>
-  <div class="tabs" role="tablist" aria-label="View">
-    <button role="tab" aria-selected={ui.view === "map"} onclick={() => onview("map")}>Map</button>
-    <button role="tab" aria-selected={ui.view === "list"} onclick={() => onview("list")}>Catalogue</button>
+<header
+  class={[
+    "absolute inset-x-0 top-0 z-10 flex h-14 items-center gap-2 border-b border-line bg-ground px-3",
+    "lg:gap-4 lg:px-4",
+  ]}
+>
+  <div class="hidden font-display text-2xl font-bold tracking-[0.2em] whitespace-nowrap lg:block">
+    CLOCKMOST <span class="text-accent">ATLAS</span>
   </div>
 
-  <div class="search">
+  <div class="flex self-stretch" role="tablist" aria-label="View">
+    <button class="ef-tab px-2 lg:px-4" role="tab" aria-selected={onMap} onclick={() => onview("map")}>
+      Map
+    </button>
+    <button class="ef-tab px-2 lg:px-4" role="tab" aria-selected={!onMap} onclick={() => onview("list")}>
+      Catalogue
+    </button>
+  </div>
+
+  <div class="relative min-w-0 flex-1 lg:max-w-sm">
     <input
+      class="ef-input w-full"
       bind:this={input}
       bind:value={q}
       placeholder={ui.traceFrom
@@ -59,228 +76,69 @@
       }}
     />
     {#if hits.length}
-      <ul>
-        {#each hits as h (h.id)}<li>
-            <button onclick={() => choose(h.id)}>{h.label}<i>{h.sub ?? ""}</i></button>
-          </li>{/each}
+      <ul class="absolute inset-x-0 top-full z-20 border border-line bg-surface">
+        {#each hits as h (h.id)}
+          <li>
+            <button
+              class="flex w-full justify-between gap-2 px-3 py-2 text-left hover:bg-surface-2"
+              onclick={() => choose(h.id)}
+            >
+              {h.label}<span class="ef-label">{h.sub ?? ""}</span>
+            </button>
+          </li>
+        {/each}
       </ul>
     {/if}
   </div>
 
-  <button
-    class="lines-btn"
-    class:on={layersOpen}
-    class:hidden={ui.view !== "map"}
-    onclick={() => (layersOpen = !layersOpen)}>Lines</button
-  >
-  <div class="layers" class:open={layersOpen} class:hidden={ui.view !== "map"}>
-    {#each KINDS as [k, label] (k)}
+  {#if onMap}
+    <button
+      class="ef-btn ef-btn--ghost px-2 lg:hidden"
+      aria-expanded={layersOpen}
+      onclick={() => (layersOpen = !layersOpen)}
+    >
+      Lines
+    </button>
+    <!-- phone: a sheet under the bar; desktop: inline chips -->
+    <div
+      class={[
+        "absolute inset-x-0 top-14 flex-wrap gap-1 border-b border-line bg-ground p-3",
+        layersOpen ? "flex" : "hidden",
+        "lg:static lg:flex lg:border-0 lg:bg-transparent lg:p-0",
+      ]}
+    >
+      {#each KINDS as [k, label] (k)}
+        <button
+          class={["ef-pill", !ui.layers[k] && "opacity-40"]}
+          aria-pressed={ui.layers[k]}
+          onclick={() => (ui.layers[k] = !ui.layers[k])}
+          title="Show {label} lines"
+        >
+          <span class={["h-0.5 w-4", KIND_BG[k]]}></span>{label}
+        </button>
+      {/each}
       <button
-        class:off={!ui.layers[k]}
-        onclick={() => (ui.layers[k] = !ui.layers[k])}
-        title="Show {label} lines"
+        class={["ef-pill", ui.allLines && "border-accent text-accent"]}
+        aria-pressed={ui.allLines}
+        onclick={() => ui.setAllLines(!ui.allLines)}
       >
-        <svg width="18" height="6"
-          ><line x1="0" y1="3" x2="18" y2="3" stroke={KIND_COLOR[k]} stroke-width="3" /></svg
-        >{label}
+        All lines
       </button>
-    {/each}
-    <button class="all" class:on={ui.allLines} onclick={() => ui.setAllLines(!ui.allLines)}>All lines</button>
-    <button onclick={onfit} title="Fit the map">Fit</button>
-  </div>
+      <button class="ef-pill" onclick={onfit} title="Fit the map (f)">Fit</button>
+      <button class="ef-pill hidden lg:inline-flex" onclick={onwall} title="Wall mode (w)">Wall</button>
+    </div>
+  {/if}
 
-  <div class="live" class:stale={!live.data || isStale(live.data)} class:err={!!live.error}>
-    {#if live.data}
-      <b>●</b> live · {ago(live.data.generated)} ago{#if bad}
-        · <em>{bad} high</em>{/if}
-    {:else if live.error}
-      live status unavailable
-    {:else}
-      live status: connecting…
-    {/if}
+  <div class="ef-pill ml-auto border-0 px-1 lg:border lg:px-3" data-state={liveState}>
+    <span class="ef-diamond"></span>
+    <span class="hidden lg:inline">
+      {#if live.data}
+        live · {ago(live.data.generated)} ago{#if bad}<span class="text-crit"> · {bad} high</span>{/if}
+      {:else if live.error}
+        live status unavailable
+      {:else}
+        connecting…
+      {/if}
+    </span>
   </div>
 </header>
-
-<style>
-  .bar {
-    position: absolute;
-    top: 0;
-    left: 0;
-    right: 0;
-    display: flex;
-    align-items: center;
-    gap: 18px;
-    padding: 10px 16px;
-    background: linear-gradient(var(--color-bg) 70%, transparent);
-    z-index: 2;
-    flex-wrap: wrap;
-  }
-  .brand {
-    font: 700 28px var(--font-display);
-    letter-spacing: 0.1em;
-  }
-  .brand span {
-    color: var(--color-signal);
-  }
-  .search {
-    position: relative;
-    flex: 0 1 340px;
-  }
-  input {
-    width: 100%;
-    background: var(--color-panel);
-    border: 1px solid var(--color-line);
-    padding: 7px 12px;
-    font-size: 15px;
-  }
-  input:focus {
-    outline: none;
-    border-color: var(--color-signal);
-  }
-  ul {
-    position: absolute;
-    top: 100%;
-    left: 0;
-    right: 0;
-    background: var(--color-panel);
-    border: 1px solid var(--color-line);
-    z-index: 3;
-  }
-  li button {
-    width: 100%;
-    text-align: left;
-    padding: 6px 12px;
-    display: flex;
-    justify-content: space-between;
-    gap: 8px;
-  }
-  li button:hover {
-    background: #26292d;
-    color: var(--color-signal);
-  }
-  i {
-    color: var(--color-muted);
-    font: 12px var(--font-mono);
-  }
-  .layers {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 4px;
-  }
-  .layers button {
-    display: flex;
-    align-items: center;
-    gap: 6px;
-    border: 1px solid var(--color-line);
-    padding: 3px 9px;
-    font: 600 14px var(--font-display);
-    letter-spacing: 0.06em;
-    text-transform: uppercase;
-  }
-  .layers button.off {
-    opacity: 0.35;
-  }
-  .layers button.on,
-  .layers button:hover {
-    border-color: var(--color-signal);
-  }
-  .live {
-    margin-left: auto;
-    font: 13px var(--font-mono);
-    color: var(--color-muted);
-  }
-  .live b {
-    color: var(--color-ok);
-  }
-  .live.stale b,
-  .live em {
-    color: var(--color-danger);
-    font-style: normal;
-  }
-  .lines-btn {
-    display: none;
-  }
-  .tabs {
-    display: flex;
-  }
-  .tabs button {
-    border: 1px solid var(--color-line);
-    padding: 5px 12px;
-    font: 600 15px var(--font-display);
-    letter-spacing: 0.08em;
-    text-transform: uppercase;
-    color: var(--color-muted);
-  }
-  .tabs button + button {
-    border-left: 0;
-  }
-  .tabs button[aria-selected="true"] {
-    background: var(--color-ink);
-    border-color: var(--color-ink);
-    color: var(--color-bg);
-  }
-  .layers.hidden {
-    display: none;
-  }
-
-  /* phone / narrow: one row (brand, search, Lines, live dot); chips drop down on demand */
-  @media (max-width: 900px) {
-    .bar {
-      flex-wrap: nowrap;
-      gap: 10px;
-      padding: 8px 12px;
-      height: 56px;
-      background: var(--color-bg);
-      border-bottom: 1px solid var(--color-line);
-    }
-    .brand {
-      display: none; /* the tabs carry the identity; the row is too narrow for both */
-    }
-    .tabs button {
-      padding: 6px 8px;
-      font-size: 14px;
-    }
-    .search {
-      flex: 1 1 auto;
-      min-width: 0;
-    }
-    .lines-btn {
-      display: block;
-      border: 1px solid var(--color-line);
-      padding: 6px 10px;
-      font: 600 14px var(--font-display);
-      letter-spacing: 0.06em;
-      text-transform: uppercase;
-    }
-    .lines-btn.on {
-      border-color: var(--color-signal);
-      color: var(--color-signal);
-    }
-    .lines-btn.hidden {
-      display: none;
-    }
-    .layers {
-      display: none;
-      position: absolute;
-      top: 56px;
-      left: 0;
-      right: 0;
-      padding: 10px 12px;
-      background: var(--color-bg);
-      border-bottom: 1px solid var(--color-line);
-    }
-    .layers.open {
-      display: flex;
-    }
-    .layers button {
-      padding: 6px 10px;
-    }
-    .live {
-      font-size: 0;
-      margin-left: 0;
-    }
-    .live b {
-      font-size: 14px;
-    }
-  }
-</style>

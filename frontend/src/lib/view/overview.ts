@@ -3,8 +3,11 @@
 import { GEO, type Layout } from "../layout/columns";
 import { TOP_BAR, type panzoom } from "./panzoom";
 
-export const NARROW_PX = 900; // same breakpoint as the components' @media (max-width: 900px)
-export const isNarrow = () => innerWidth <= NARROW_PX;
+/** Below Tailwind's `lg` is the phone layout: the same breakpoint the `lg:` classes use. */
+export function isNarrow(): boolean {
+  const lg = getComputedStyle(document.documentElement).getPropertyValue("--breakpoint-lg").trim();
+  return !matchMedia(`(min-width: ${lg || "64rem"})`).matches;
+}
 
 export function overview(api: ReturnType<typeof panzoom>, l: Layout) {
   if (!isNarrow()) return api.fit({ x: 0, y: 0, w: l.width, h: l.height }, { top: TOP_BAR });

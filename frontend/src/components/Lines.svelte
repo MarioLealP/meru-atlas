@@ -1,6 +1,6 @@
 <script lang="ts">
   import type { Edge } from "../lib/graph/model";
-  import { KIND_COLOR, KIND_DASH } from "../lib/view/kinds";
+  import { KIND_DASH, KIND_STROKE } from "../lib/view/kinds";
 
   let {
     edges,
@@ -10,47 +10,27 @@
   }: { edges: Edge[]; paths: Map<number, string>; strong?: boolean; flow?: boolean } = $props();
 </script>
 
-<g class="lines" class:strong>
+<!-- a halo under each line keeps crossings readable; a traced route gets a signal pulse
+     running source → target (routed paths always start at `from`) -->
+<g class="pointer-events-none fill-none" stroke-linejoin="round">
   {#each edges as e (e.i)}
     {@const d = paths.get(e.i)}
     {#if d}
-      <path class="halo" {d} />
-      <path {d} stroke={KIND_COLOR[e.kind]} stroke-dasharray={KIND_DASH[e.kind]} />
-      {#if flow}<path class="pulse" {d} />{/if}
+      <path class="stroke-ground opacity-85" stroke-width="6" {d} />
+      <path
+        class={KIND_STROKE[e.kind]}
+        stroke-width={strong ? 3.2 : 2.4}
+        stroke-dasharray={KIND_DASH[e.kind]}
+        {d}
+      />
+      {#if flow}
+        <path
+          class="stroke-accent animate-flow motion-reduce:animate-none"
+          stroke-width="3.6"
+          stroke-dasharray="6 26"
+          {d}
+        />
+      {/if}
     {/if}
   {/each}
 </g>
-
-<style>
-  path {
-    fill: none;
-    stroke-width: 2.4;
-    stroke-linejoin: round;
-    pointer-events: none;
-  }
-  .halo {
-    stroke: var(--color-bg);
-    stroke-width: 6;
-    opacity: 0.85;
-  }
-  /* a traced route: signal pulses running from source to target (paths start at `from`) */
-  .pulse {
-    stroke: var(--color-signal);
-    stroke-width: 3.6;
-    stroke-dasharray: 6 26;
-    animation: flow 0.9s linear infinite;
-  }
-  @keyframes flow {
-    to {
-      stroke-dashoffset: -32;
-    }
-  }
-  @media (prefers-reduced-motion: reduce) {
-    .pulse {
-      animation: none;
-    }
-  }
-  .strong path:not(.halo, .pulse) {
-    stroke-width: 3.2;
-  }
-</style>

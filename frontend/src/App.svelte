@@ -16,6 +16,7 @@
   import { TOP_BAR, type Inset, type panzoom } from "./lib/view/panzoom";
   import { boundsOf } from "./lib/view/bounds";
   import { buildScene } from "./lib/view/scene";
+  import { wallList, wallTour } from "./lib/view/wall";
 
   let model = $state<Model | null>(null);
   let scene = $state<Awaited<ReturnType<typeof buildScene>> | null>(null);
@@ -104,9 +105,26 @@
     }
   }
 
+  // wall mode: full screen, no chrome, the card tours red then amber units (lib/view/wall.ts)
+  let stopWall = $state<(() => void) | null>(null);
+  function toggleWall() {
+    if (stopWall) return stopWall();
+    let i = 0;
+    const step = () => {
+      const list = model ? wallList(model, liveBy) : [];
+      if (list.length) go(list[i++ % list.length]!);
+    };
+    stopWall = wallTour(step, () => {
+      stopWall = null;
+      pick(null);
+      home();
+    });
+  }
+
   function onkey(e: KeyboardEvent) {
     if ((e.target as HTMLElement).tagName === "INPUT") return;
-    if (e.key === "Escape") pick(null);
+    if (e.key === "Escape") stopWall ? stopWall() : pick(null);
+    else if (e.key === "w" && ui.view === "map") toggleWall();
     else if (e.key === "/") {
       e.preventDefault();
       toolbar?.focusSearch();
@@ -130,7 +148,7 @@
 
 <svelte:window onkeydown={onkey} onhashchange={applyHash} />
 
-<main>
+<main class="fixed inset-0 overflow-hidden">
   {#if model && scene}
     <!-- on a phone a tap also frames the unit, else the bottom sheet could cover it -->
     <Map
@@ -142,7 +160,9 @@
       bind:api
     />
     {#if ui.view === "list"}<Catalogue {model} {liveBy} onshow={go} />{/if}
-    <Toolbar bind:this={toolbar} {model} onpick={go} onfit={home} onview={setView} />
+    {#if !stopWall}
+      <Toolbar bind:this={toolbar} {model} onpick={go} onfit={home} onview={setView} onwall={toggleWall} />
+    {/if}
     {#if ui.view === "map" && ui.selected && ui.cardOpen}
       <Card
         {model}
@@ -157,25 +177,7 @@
       <RouteBar {model} path={ui.trace?.path ?? null} {notice} onstep={flyTo} onclear={() => pick(null)} />
     {/if}
   {:else if !error}
-    <p class="status">loading the map…</p>
+    <p class="ef-label absolute bottom-4 left-4">loading the map…</p>
   {/if}
-  {#if error}<p class="status err">{error}</p>{/if}
+  {#if error}<p class="absolute bottom-4 left-4 font-mono text-sm text-crit">{error}</p>{/if}
 </main>
-
-<style>
-  main {
-    position: fixed;
-    inset: 0;
-    overflow: hidden;
-  }
-  .status {
-    position: absolute;
-    bottom: 16px;
-    left: 16px;
-    font: 14px var(--font-mono);
-    color: var(--color-muted);
-  }
-  .err {
-    color: var(--color-danger);
-  }
-</style>

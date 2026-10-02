@@ -4,7 +4,7 @@
   import type { UnitLive } from "../lib/live/health";
   import type { Link } from "../lib/schemas";
   import { catalogue, filterRows } from "../lib/view/catalogue";
-  import CatalogueRow from "./CatalogueRow.svelte";
+  import CatalogueRow, { PILL } from "./CatalogueRow.svelte";
 
   let {
     model,
@@ -32,238 +32,90 @@
   };
 </script>
 
-<div class="page">
-  <section>
-    <h2><span class="no">01</span>Unit catalogue</h2>
-    <p class="lede">
+<!-- covers the map, which stays mounted underneath so pan/zoom survive a trip here -->
+<div class="absolute inset-x-0 top-14 bottom-0 overflow-y-auto bg-ground px-3 pt-4 pb-12 lg:px-6">
+  <section class="mx-auto mb-10 max-w-[1800px]">
+    <h2 class="ef-sec-head mb-3 font-display text-2xl font-bold uppercase lg:text-3xl">
+      <span class="ef-idx">01</span>Unit catalogue
+    </h2>
+    <p class="mb-3 max-w-[80ch] text-ink-2">
       Generated from the infra repo on every push: every service, what it's for, how you reach it, how it logs
       you in, its networks and what it talks to.
     </p>
-    <div class="tools">
-      <div class="filters" role="group" aria-label="Filter by zone">
-        <button aria-pressed={zone === "all"} onclick={() => (zone = "all")}>All</button>
-        {#each zones as z (z.id)}
-          <button aria-pressed={zone === z.id} onclick={() => (zone = z.id)}>{z.title}</button>
+
+    <!-- phone: search on top, zone chips in one swipeable row; desktop: one wrapping row -->
+    <div class="mb-3 flex flex-col gap-2 lg:flex-row lg:flex-wrap">
+      <input
+        class="ef-input lg:order-last lg:w-80"
+        type="search"
+        bind:value={q}
+        placeholder="search units, hosts, logins…"
+        aria-label="Search"
+      />
+      <div
+        class="flex max-w-full gap-1 overflow-x-auto [scrollbar-width:none] lg:flex-wrap"
+        role="group"
+        aria-label="Filter by zone"
+      >
+        {#each [{ id: "all", title: "All" }, ...zones] as z (z.id)}
+          <button
+            class={["ef-pill flex-none", zone === z.id && "border-accent bg-accent text-on-accent"]}
+            aria-pressed={zone === z.id}
+            onclick={() => (zone = z.id)}>{z.title}</button
+          >
         {/each}
       </div>
-      <input type="search" bind:value={q} placeholder="search units, hosts, logins…" aria-label="Search" />
     </div>
-    <div class="legend">
-      <span><span class="pill sso">SSO</span> Authentik login</span>
-      <span><span class="pill pub">public</span> via Cloudflare tunnel</span>
-      <span><span class="pill none">no SSO</span> nothing in front</span>
+
+    <div class="mb-3 flex flex-wrap gap-x-4 gap-y-1 text-sm text-ink-3">
+      <span><span class={PILL.sso}>SSO</span> Authentik login</span>
+      <span><span class={PILL.pub}>public</span> via Cloudflare tunnel</span>
+      <span><span class={PILL.none}>no SSO</span> nothing in front</span>
     </div>
-    <table>
-      <thead>
+
+    <!-- ef-table styles the desktop table; on a phone the rows/cells are blocks (CatalogueRow) -->
+    <table class="ef-table block lg:table">
+      <thead class="hidden lg:table-header-group">
         <tr>
           {#each COLUMNS as c (c)}<th>{c}</th>{/each}
         </tr>
       </thead>
-      <tbody>
+      <tbody class="block lg:table-row-group">
         {#each shown as r (r.id)}
           <CatalogueRow {r} live={liveBy.get(r.id)} {onshow} />
         {:else}
-          <tr><td colspan="7" class="empty">No units match.</td></tr>
+          <tr><td colspan="7" class="py-5 text-ink-3">No units match.</td></tr>
         {/each}
       </tbody>
     </table>
   </section>
 
-  <section>
-    <h2><span class="no">02</span>Quick links</h2>
-    <div class="dir">
+  <section class="mx-auto max-w-[1800px]">
+    <h2 class="ef-sec-head mb-3 font-display text-2xl font-bold uppercase lg:text-3xl">
+      <span class="ef-idx">02</span>Quick links
+    </h2>
+    <div class="grid grid-cols-1 gap-2 sm:grid-cols-2 lg:grid-cols-[repeat(auto-fill,minmax(16rem,1fr))]">
       {#each links as { n, l, title } (l.url + title)}
         {@const icon = iconUrl(n.icon)}
-        <a href={l.url} target="_blank" rel="noopener noreferrer">
-          {#if icon}<img alt="" src={icon} />{:else}<span class="pb">{initials(n.label)}</span>{/if}
-          <span><b>{title}</b><i>{where(l.url)}</i></span>
+        <a
+          class="ef-card flex items-center gap-3 p-3 hover:border-accent"
+          href={l.url}
+          target="_blank"
+          rel="noopener noreferrer"
+        >
+          {#if icon}
+            <img class="size-7 flex-none" alt="" src={icon} />
+          {:else}
+            <span class="grid size-7 flex-none place-items-center bg-well font-display text-xs text-ink-3">
+              {initials(n.label)}
+            </span>
+          {/if}
+          <span class="min-w-0">
+            <b class="block truncate font-display text-lg font-semibold">{title}</b>
+            <span class="ef-label block truncate normal-case">{where(l.url)}</span>
+          </span>
         </a>
       {/each}
     </div>
   </section>
 </div>
-
-<style>
-  .page {
-    position: absolute;
-    inset: 56px 0 0;
-    background: var(--color-bg); /* covers the map, which stays mounted underneath */
-    overflow-y: auto;
-    padding: 16px 24px 48px;
-  }
-  section {
-    max-width: 1800px;
-    margin: 0 auto 40px;
-  }
-  h2 {
-    font: 700 30px var(--font-display);
-    letter-spacing: 0.06em;
-    text-transform: uppercase;
-    border-bottom: 2px solid var(--color-ink);
-    padding-bottom: 4px;
-    margin-bottom: 10px;
-  }
-  .no {
-    color: var(--color-signal);
-    margin-right: 12px;
-    font-size: 18px;
-    vertical-align: middle;
-  }
-  .lede {
-    color: var(--color-muted);
-    max-width: 80ch;
-    margin-bottom: 12px;
-  }
-  .tools {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 6px;
-    margin-bottom: 10px;
-  }
-  .filters {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 6px;
-  }
-  .filters button {
-    border: 1px solid var(--color-line);
-    padding: 4px 10px;
-    font: 600 14px var(--font-display);
-    letter-spacing: 0.06em;
-    text-transform: uppercase;
-  }
-  .filters button[aria-pressed="true"] {
-    background: var(--color-signal);
-    border-color: var(--color-signal);
-    color: var(--color-bg);
-  }
-  input {
-    flex: 1 1 240px;
-    max-width: 380px;
-    background: var(--color-panel);
-    border: 1px solid var(--color-line);
-    padding: 5px 10px;
-  }
-  input:focus {
-    outline: none;
-    border-color: var(--color-signal);
-  }
-  .legend {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 16px;
-    color: var(--color-muted);
-    font-size: 13px;
-    margin-bottom: 12px;
-  }
-  table {
-    width: 100%;
-    border-collapse: collapse;
-  }
-  th {
-    text-align: left;
-    font: 600 13px var(--font-display);
-    letter-spacing: 0.12em;
-    text-transform: uppercase;
-    color: var(--color-muted);
-    border-bottom: 1px solid var(--color-line);
-    padding: 6px 10px;
-  }
-  .empty {
-    padding: 20px 10px;
-    color: var(--color-muted);
-  }
-  .dir {
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
-    gap: 8px;
-  }
-  .dir a {
-    display: flex;
-    align-items: center;
-    gap: 12px;
-    padding: 10px 12px;
-    background: var(--color-panel);
-    border: 1px solid var(--color-line);
-    border-left: 3px solid var(--color-line);
-  }
-  .dir a:hover {
-    border-left-color: var(--color-signal);
-  }
-  .dir img,
-  .pb {
-    width: 28px;
-    height: 28px;
-    flex: none;
-  }
-  .pb {
-    display: grid;
-    place-items: center;
-    background: #2c2f34;
-    font: 600 12px var(--font-display);
-    color: var(--color-muted);
-  }
-  .dir b {
-    display: block;
-    font: 600 17px var(--font-display);
-  }
-  .dir i {
-    display: block;
-    font: 12px var(--font-mono);
-    font-style: normal;
-    color: var(--color-muted);
-  }
-  /* pills are shared with the rows */
-  :global(.pill) {
-    display: inline-block;
-    padding: 1px 7px;
-    margin: 1px 4px 1px 0;
-    font: 12px var(--font-mono);
-    border: 1px solid var(--color-line);
-  }
-  :global(.pill.sso) {
-    border-color: var(--color-ok);
-    color: var(--color-ok);
-  }
-  :global(.pill.pub) {
-    border-color: var(--color-signal);
-    color: var(--color-signal);
-  }
-  :global(.pill.none) {
-    border-color: var(--color-danger);
-    color: var(--color-danger);
-  }
-  :global(.pill.note) {
-    color: var(--color-muted);
-  }
-  @media (max-width: 900px) {
-    .page {
-      padding: 12px 12px 40px;
-    }
-    /* zone chips: one swipeable row instead of half a screen of buttons */
-    .filters {
-      flex-wrap: nowrap;
-      overflow-x: auto;
-      scrollbar-width: none;
-      max-width: 100%; /* else the row's content width stretches the whole page sideways */
-    }
-    .filters button {
-      flex: none;
-    }
-    .tools {
-      flex-direction: column;
-    }
-    input {
-      flex: none;
-      max-width: none;
-      order: -1; /* search first, chips under it */
-    }
-    thead {
-      display: none;
-    }
-    table,
-    tbody {
-      display: block;
-    }
-  }
-</style>
