@@ -3,6 +3,7 @@
   import Card from "./components/Card.svelte";
   import Catalogue from "./components/Catalogue.svelte";
   import Map from "./components/Map.svelte";
+  import Launcher from "./components/Launcher.svelte";
   import RouteBar from "./components/RouteBar.svelte";
   import Toolbar from "./components/Toolbar.svelte";
   import { getValidated } from "./lib/api";
@@ -128,8 +129,15 @@
     });
   }
 
+  let launcher = $state(false); // Ctrl/Cmd+K palette (phase 5: the atlas as start page)
+
   function onkey(e: KeyboardEvent) {
-    if ((e.target as HTMLElement).tagName === "INPUT") return;
+    if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === "k") {
+      e.preventDefault(); // works from anywhere, inputs included
+      launcher = !launcher;
+      return;
+    }
+    if (launcher || (e.target as HTMLElement).tagName === "INPUT") return;
     if (e.key === "Escape") stopWall ? stopWall() : pick(null);
     else if (e.key === "w" && ui.view === "map") toggleWall();
     else if (e.key === "/") {
@@ -182,6 +190,7 @@
     {#if ui.trace || notice}
       <RouteBar {model} path={ui.trace?.path ?? null} {notice} onstep={flyTo} onclear={() => pick(null)} />
     {/if}
+    {#if launcher}<Launcher {model} onshow={go} onclose={() => (launcher = false)} />{/if}
   {:else if !error}
     <p class="ef-label absolute bottom-4 left-4">loading the map…</p>
   {/if}
