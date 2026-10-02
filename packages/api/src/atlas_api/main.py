@@ -2,7 +2,7 @@
 
 from fastapi import FastAPI
 
-from atlas_api.routers import data, health
+from atlas_api.routers import data, health, web
 from atlas_api.security import identity_guard
 from atlas_api.services.datafiles import DataFile
 from atlas_api.settings import Settings
@@ -16,4 +16,6 @@ def create_app(settings: Settings | None = None) -> FastAPI:
     app.middleware("http")(identity_guard(s.identity_header, s.dev_mode))
     app.include_router(health.router)
     app.include_router(data.router)
+    if s.web_dir:
+        app.include_router(web.make_router(s.web_dir))
     return app

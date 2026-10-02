@@ -18,3 +18,5 @@ class Settings(BaseSettings):
     # refused (fail closed if a route ever bypasses the gate). Dev mode skips it.
     identity_header: str = "X-Authentik-Username"
     dev_mode: bool = False
+    # the built frontend (the Dockerfile sets /app/web); unset = API only (dev uses Vite)
+    web_dir: Path | None = None
