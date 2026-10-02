@@ -50,3 +50,24 @@ jobs:
           uv build --package atlas-gen --out-dir dist
           ./scripts/secret-scan.sh dist
           uv publish --publish-url https://git.clockmost.com/api/packages/benylin/pypi dist/*
+
+  deploy:
+    # image git.clockmost.com/benylin/atlas:<sha> -> tag bump in clockmost-infra
+    # projects/atlas/compose.yaml -> the infra deploy loop rolls it out (shared WP-53 step)
+    needs: [python, frontend]
+    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+    runs-on: ubuntu-latest
+    container:
+      image: catthehacker/ubuntu:act-latest
+      volumes:
+        - /var/run/docker.sock:/var/run/docker.sock
+    steps:
+      - uses: actions/checkout@v4
+      - name: build, push, promote (shared deploy.sh, WP-53)
+        env:
+          REGISTRY_TOKEN: ${{ secrets.REGISTRY_TOKEN }}
+          INFRA_DEPLOY_KEY: ${{ secrets.INFRA_DEPLOY_KEY }}
+          INFRA_REPO_URL: ${{ secrets.INFRA_REPO_URL }}
+          INFRA_KNOWN_HOSTS: ${{ secrets.INFRA_KNOWN_HOSTS }}
+          COMMIT_MSG: ${{ github.event.head_commit.message }}
+        run: curl -fsSL https://git.clockmost.com/Benylin/ci-workflows/raw/branch/main/deploy.sh | bash -s -- atlas
