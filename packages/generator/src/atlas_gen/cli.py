@@ -22,10 +22,13 @@ def main(argv: list[str] | None = None) -> int:
     b = sub.add_parser("build", help="generate graph.json from an infra repo checkout")
     b.add_argument("repo", type=Path)
     b.add_argument("-o", "--out", type=Path, help="output file (default: stdout)")
+    b.add_argument(
+        "--with-commit", action="store_true", help="record the infra HEAD (output then changes per commit)"
+    )
     args = ap.parse_args(argv)
 
     if args.cmd == "build":
-        graph = build(args.repo)
+        graph = build(args.repo, with_commit=args.with_commit)
         if errs := contracts.errors("graph", graph):
             print("\n".join(errs), file=sys.stderr)
             return 1

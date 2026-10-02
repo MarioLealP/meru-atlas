@@ -30,7 +30,8 @@ def _commit(repo: Path) -> str | None:
     return head if re.fullmatch(r"[0-9a-f]{7,40}", head) else None
 
 
-def build(repo: Path, overlay_path: Path | None = None) -> dict[str, Any]:
+def build(repo: Path, overlay_path: Path | None = None, with_commit: bool = False) -> dict[str, Any]:
+    """Deterministic by default (same repo content -> same bytes), so CI only commits real changes."""
     cts = compose.parse(repo)
     routes = caddy.parse(repo)
     public = cloudflared.parse(repo)
@@ -113,6 +114,6 @@ def build(repo: Path, overlay_path: Path | None = None) -> dict[str, Any]:
         "edges": edges,
         "warnings": j.warnings,
     }
-    if sha := _commit(repo):
+    if with_commit and (sha := _commit(repo)):
         graph["source"] = {"repo": "Benylin/clockmost-infra", "commit": sha}
     return graph

@@ -56,3 +56,8 @@ def test_warnings_for_missing_container_and_bad_edge():
 def test_zones_order_and_strip():
     z = {x["id"]: x for x in graph()["zones"]}
     assert z["edge"]["order"] == 0 and z["plat"]["strip"] is True
+
+
+def test_deterministic_without_commit():
+    a, b = json.dumps(build(REPO)), json.dumps(build(REPO))
+    assert a == b and "source" not in build(REPO)
