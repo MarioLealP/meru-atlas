@@ -14,3 +14,6 @@ frontend/dist/
 .vscode/
 .idea/
 .DS_Store
+
+# schemas are copied into the generator package at build time (single source: /schemas)
+packages/generator/src/atlas_gen/schemas/

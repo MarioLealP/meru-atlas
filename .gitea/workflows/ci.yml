@@ -29,3 +29,24 @@ jobs:
       - run: npm run check
       - run: npm run build
       - run: cd .. && apk add --no-cache bash grep >/dev/null && ./scripts/secret-scan.sh
+
+  publish-generator:
+    # atlas-gen -> Gitea's PyPI registry, so the infra repo's CI can `uvx atlas-gen`.
+    needs: [python, frontend]
+    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+    runs-on: ubuntu-latest
+    container: { image: "catthehacker/ubuntu:act-latest" }
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v6
+        with: { python-version: "3.13" }
+      - name: build + publish (version 0.1.<run number>)
+        env:
+          UV_PUBLISH_USERNAME: benylin
+          UV_PUBLISH_PASSWORD: ${{ secrets.REGISTRY_TOKEN }}
+        run: |
+          cp -r schemas packages/generator/src/atlas_gen/schemas
+          uv version --package atlas-gen "0.1.${{ github.run_number }}"
+          uv build --package atlas-gen --out-dir dist
+          ./scripts/secret-scan.sh dist
+          uv publish --publish-url https://git.clockmost.com/api/packages/benylin/pypi dist/*

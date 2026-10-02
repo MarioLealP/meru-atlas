@@ -1,0 +1,9 @@
+name: caddy
+services:
+  caddy:
+    image: caddy:2.11@sha256:abc
+    container_name: caddy
+    ports: ["443:443"]
+    networks: [front-web]
+networks:
+  front-web: { name: front-web, external: true }
