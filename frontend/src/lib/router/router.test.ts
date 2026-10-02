@@ -137,3 +137,20 @@ describe("obstacles", () => {
     for (const s of segments(r!)) expect(hitsBox(s, bar)).toBe(false);
   });
 });
+
+describe("busy units", () => {
+  it("gives every line its own door even when one side is over capacity", () => {
+    // a hub with 16 lines to the right: one 60-px side only fits ~5 doors
+    const rects = [box("hub", 0, 300)];
+    for (let i = 0; i < 16; i++) rects.push(box(`t${i}`, 500, i * 80, 100, 50));
+    const edges = rects.slice(1).map((r) => ({ id: r.id, from: "hub", to: r.id }));
+    const out = routeAll(rects, edges);
+    expect(out.every((r) => r.ok)).toBe(true);
+    const doors = out.map((r) => `${r.points[0]!.x},${r.points[0]!.y}`);
+    expect(new Set(doors).size).toBe(doors.length);
+    const segs = out.map(segments);
+    for (let i = 0; i < segs.length; i++)
+      for (let j = i + 1; j < segs.length; j++)
+        for (const s of segs[i]!) for (const t of segs[j]!) expect(overlap(s, t)).toBe(0);
+  });
+});

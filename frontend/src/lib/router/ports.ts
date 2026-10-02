@@ -1,6 +1,7 @@
 import type { EdgeReq, Pt, Rect, Side } from "./types";
 
 export type Port = { pt: Pt; side: Side };
+type SlotT = { edge: string; end: 0 | 1; other: Rect };
 
 const cx = (r: Rect) => r.x + r.w / 2;
 const cy = (r: Rect) => r.y + r.h / 2;
@@ -31,8 +32,7 @@ export function assignPorts(
   edges: EdgeReq[],
   step: number,
 ): Map<string, [Port, Port]> {
-  type Slot = { edge: string; end: 0 | 1; other: Rect };
-  const slots = new Map<string, Slot[]>(); // `${box}|${side}` -> slots
+  const slots = new Map<string, SlotT[]>(); // `${box}|${side}` -> slots
   const sides = new Map<string, [Side, Side]>();
   for (const e of edges) {
     const a = boxes.get(e.from)!,
@@ -49,6 +49,7 @@ export function assignPorts(
       slots.get(k)!.push({ edge: e.id, end, other });
     }
   }
+  spill(boxes, slots, step);
   const out = new Map<string, [Port, Port]>();
   for (const [k, list] of slots) {
     const [boxId, side] = k.split("|") as [string, Side];
@@ -77,4 +78,48 @@ export function assignPorts(
     });
   }
   return out;
+}
+
+/** How many distinct grid doors fit on a side (corners excluded). */
+export function capacity(r: Rect, side: Side, step: number): number {
+  const len = side === "left" || side === "right" ? r.h : r.w;
+  return Math.max(1, Math.floor((len - 2 * step) / step) + 1);
+}
+
+const PERP: Record<Side, [Side, Side]> = {
+  left: ["top", "bottom"],
+  right: ["top", "bottom"],
+  top: ["left", "right"],
+  bottom: ["left", "right"],
+};
+
+/**
+ * A side with more lines than doors pushes the extras onto its two neighbouring sides:
+ * the ones whose far end is earlier along the side (higher / further left) to the first,
+ * the rest to the second. Without this, extra doors were rounded onto occupied ones and
+ * lines overlapped (Mario 2026-10-02).
+ */
+function spill(boxes: Map<string, Rect>, slots: Map<string, SlotT[]>, step: number): void {
+  for (let pass = 0; pass < 2; pass++) {
+    for (const [k, list] of [...slots]) {
+      const [boxId, side] = k.split("|") as [string, Side];
+      const r = boxes.get(boxId)!;
+      const cap = capacity(r, side, step);
+      if (list.length <= cap) continue;
+      const vertical = side === "left" || side === "right";
+      list.sort((p, q) => (vertical ? cy(p.other) - cy(q.other) : cx(p.other) - cx(q.other)) || (p.edge < q.edge ? -1 : 1));
+      const extra = list.length - cap;
+      const first = list.splice(0, Math.ceil(extra / 2));
+      const last = list.splice(list.length - Math.floor(extra / 2));
+      const [s1, s2] = PERP[side];
+      for (const [to, moved] of [
+        [s1, first],
+        [s2, last],
+      ] as const) {
+        const key = `${boxId}|${to}`;
+        if (!slots.has(key)) slots.set(key, []);
+        slots.get(key)!.push(...moved);
+      }
+    }
+  }
 }
