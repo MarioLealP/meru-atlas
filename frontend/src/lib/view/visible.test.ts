@@ -44,3 +44,14 @@ describe("visible", () => {
     expect(v.edges.map((e) => e.i)).toEqual([0]);
   });
 });
+
+describe("visible with a lens", () => {
+  it("shows the lens lines and lights its units, and a trace still wins", () => {
+    const lens = { lit: new Set(["a", "b"]), edges: [0] };
+    const v = visible(m, f({ selected: "c", lens }));
+    expect(v.edges.map((e) => e.i)).toEqual([0]);
+    expect(v.lit).toBe(lens.lit);
+    const traced = visible(m, f({ lens, trace: { path: ["b", "c"], edges: [1] } }));
+    expect(traced.edges.map((e) => e.i)).toEqual([1]);
+  });
+});

@@ -3,6 +3,7 @@
   import Card from "./components/Card.svelte";
   import Catalogue from "./components/Catalogue.svelte";
   import Map from "./components/Map.svelte";
+  import ExposureBar from "./components/ExposureBar.svelte";
   import Launcher from "./components/Launcher.svelte";
   import RouteBar from "./components/RouteBar.svelte";
   import Toolbar from "./components/Toolbar.svelte";
@@ -12,6 +13,7 @@
   import { live } from "./lib/live/poll.svelte";
   import { Graph } from "./lib/schemas";
   import { ui } from "./lib/state.svelte";
+  import { exposure } from "./lib/view/exposure";
   import { readHash, writeHash } from "./lib/view/hash";
   import { isNarrow, overview } from "./lib/view/overview";
   import { TOP_BAR, type Inset, type panzoom } from "./lib/view/panzoom";
@@ -129,6 +131,7 @@
     });
   }
 
+  const xp = $derived(model && ui.lens === "exposure" ? exposure(model) : null);
   let launcher = $state(false); // Ctrl/Cmd+K palette (phase 5: the atlas as start page)
 
   function onkey(e: KeyboardEvent) {
@@ -140,6 +143,7 @@
     if (launcher || (e.target as HTMLElement).tagName === "INPUT") return;
     if (e.key === "Escape") stopWall ? stopWall() : pick(null);
     else if (e.key === "w" && ui.view === "map") toggleWall();
+    else if (e.key === "e" && ui.view === "map") ui.lens = ui.lens === "exposure" ? null : "exposure";
     else if (e.key === "/") {
       e.preventDefault();
       toolbar?.focusSearch();
@@ -174,7 +178,7 @@
 <main class="fixed inset-0 overflow-hidden">
   {#if model && scene}
     <!-- a tap on a box never moves or zooms the map (Mario, 2026-10-02); only list picks fly -->
-    <Map {model} layout={scene.layout} paths={scene.paths} {liveBy} onpick={tap} bind:api />
+    <Map {model} layout={scene.layout} paths={scene.paths} {liveBy} lens={xp} onpick={tap} bind:api />
     {#if ui.view === "list"}<Catalogue {model} {liveBy} onshow={go} />{/if}
     {#if !stopWall}
       <Toolbar bind:this={toolbar} {model} onpick={go} onfit={home} onview={setView} onwall={toggleWall} />
@@ -191,6 +195,9 @@
     {/if}
     {#if ui.trace || notice}
       <RouteBar {model} path={ui.trace?.path ?? null} {notice} onstep={flyTo} onclear={() => pick(null)} />
+    {/if}
+    {#if xp && !ui.trace && !notice}
+      <ExposureBar {model} x={xp} onstep={flyTo} onclose={() => (ui.lens = null)} />
     {/if}
     {#if launcher}<Launcher {model} onshow={go} onclose={() => (launcher = false)} />{/if}
   {:else if !error}

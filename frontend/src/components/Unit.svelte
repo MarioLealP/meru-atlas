@@ -8,6 +8,7 @@
     n,
     b,
     live,
+    tag,
     dim = false,
     active = false,
     onpick,
@@ -16,6 +17,7 @@
     n: Node;
     b: Rect;
     live?: UnitLive;
+    tag?: string; // a lens's word on this unit (e.g. why it's exposed); replaces the live note
     dim?: boolean;
     active?: boolean;
     onpick: (id: string) => void;
@@ -30,7 +32,7 @@
     off: "fill-ink-4",
   };
   const icon = $derived(iconUrl(n.icon));
-  const note = $derived(live?.note ?? "");
+  const note = $derived(tag ?? live?.note ?? "");
   const noteW = $derived(note.length * 7.2 + 12);
   const cve = $derived(live && live.crit > 0 ? live.crit : 0);
   // the card is fixed-width; long text is cut here and shown whole in the detail card

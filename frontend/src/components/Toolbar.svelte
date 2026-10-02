@@ -124,6 +124,14 @@
       >
         All lines
       </button>
+      <button
+        class={["ef-pill", ui.lens === "exposure" && "border-crit text-crit"]}
+        aria-pressed={ui.lens === "exposure"}
+        onclick={() => (ui.lens = ui.lens === "exposure" ? null : "exposure")}
+        title="What the internet can reach (e)"
+      >
+        Exposure
+      </button>
       <button class="ef-pill" onclick={onfit} title="Fit the map (f)">Fit</button>
       <button class="ef-pill hidden lg:inline-flex" onclick={onwall} title="Wall mode (w)">Wall</button>
     </div>

@@ -1,6 +1,6 @@
 // Which lines are drawn and which units are lit. Lines are on demand: none in the overview
 // (unless "all lines" is on), the hovered unit's as a preview, the focused unit's on focus,
-// a traced route on its own. Pure, tested.
+// a traced route on its own, a lens (e.g. exposure) on its own. Pure, tested.
 import type { Edge, Model } from "../graph/model";
 import type { Kind } from "../state.svelte";
 
@@ -8,6 +8,7 @@ export type Focus = {
   selected: string | null;
   hover: string | null;
   trace: { path: string[]; edges: number[] } | null;
+  lens?: { lit: Set<string>; edges: number[] } | null;
   allLines: boolean;
   layers: Record<Kind, boolean>;
 };
@@ -17,6 +18,10 @@ export function visible(m: Model, f: Focus): Visible {
   if (f.trace) {
     const ids = new Set(f.trace.edges);
     return { edges: m.edges.filter((e) => ids.has(e.i)), lit: new Set(f.trace.path), strong: true };
+  }
+  if (f.lens) {
+    const ids = new Set(f.lens.edges);
+    return { edges: m.edges.filter((e) => ids.has(e.i)), lit: f.lens.lit, strong: true };
   }
   const on = (e: Edge) => f.layers[e.kind];
   if (f.selected) {
