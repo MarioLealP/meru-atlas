@@ -4,7 +4,8 @@
   import type { Layout } from "../lib/layout/columns";
   import type { UnitLive } from "../lib/live/health";
   import { ui } from "../lib/state.svelte";
-  import { panzoom, TOP_BAR, type View } from "../lib/view/panzoom";
+  import { overview } from "../lib/view/overview";
+  import { panzoom, type View } from "../lib/view/panzoom";
   import { visible } from "../lib/view/visible";
   import Lines from "./Lines.svelte";
   import Unit from "./Unit.svelte";
@@ -40,7 +41,7 @@
 
   onMount(() => {
     api = panzoom(svg, (v) => (view = v));
-    api.fit({ x: 0, y: 0, w: layout.width, h: layout.height }, TOP_BAR);
+    overview(api, layout);
     return () => api?.destroy();
   });
 

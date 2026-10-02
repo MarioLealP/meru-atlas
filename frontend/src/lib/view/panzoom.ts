@@ -4,6 +4,8 @@
 export const TOP_BAR = 56; // px of toolbar overlaying the top of the map
 export type View = { x: number; y: number; k: number };
 type Bounds = { x: number; y: number; w: number; h: number };
+/** Px of the viewport covered by overlays (toolbar, card, bottom sheet). */
+export type Inset = { top?: number; right?: number; bottom?: number };
 
 export function panzoom(svg: SVGSVGElement, onChange: (v: View) => void, opts = { min: 0.12, max: 3 }) {
   let v: View = { x: 0, y: 0, k: 1 };
@@ -20,18 +22,21 @@ export function panzoom(svg: SVGSVGElement, onChange: (v: View) => void, opts = 
     v = { x: cx - (cx - v.x) * s, y: cy - (cy - v.y) * s, k };
     emit();
   }
-  /** Fit `b` into the viewport minus overlays: `top` px (toolbar) and `right` px (card). */
-  function fit(b: Bounds, top = 0, right = 0, margin = 0.97, kMax = opts.max) {
+  /** Fit `b` into the part of the viewport not covered by overlays. */
+  function fit(b: Bounds, inset: Inset = {}, margin = 0.97, kMax = opts.max) {
+    const { top = 0, right = 0, bottom = 0 } = inset;
     const r = rect();
     const w = r.width - right,
-      h = r.height - top;
+      h = r.height - top - bottom;
     const k = Math.min(kMax, Math.min(w / b.w, h / b.h) * margin);
     v = { k, x: (w - b.w * k) / 2 - b.x * k, y: top + (h - b.h * k) / 2 - b.y * k };
     emit();
   }
-  function centerOn(x: number, y: number, k = Math.max(v.k, 0.8)) {
+  /** Show `b` at full viewport width, top-aligned under `top` px (phone start view). */
+  function fitWidth(b: Bounds, top = 0, margin = 0.97) {
     const r = rect();
-    v = { k, x: r.width / 2 - x * k, y: r.height / 2 - y * k };
+    const k = (r.width / b.w) * margin;
+    v = { k, x: (r.width - b.w * k) / 2 - b.x * k, y: top - b.y * k };
     emit();
   }
 
@@ -94,7 +99,7 @@ export function panzoom(svg: SVGSVGElement, onChange: (v: View) => void, opts = 
   return {
     zoomAt,
     fit,
-    centerOn,
+    fitWidth,
     wasDrag: () => moved,
     zoomBy: (f: number) => {
       const r = rect();

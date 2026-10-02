@@ -2,6 +2,7 @@
   import { onMount } from "svelte";
   import Card from "./components/Card.svelte";
   import Map from "./components/Map.svelte";
+  import RouteBar from "./components/RouteBar.svelte";
   import Toolbar from "./components/Toolbar.svelte";
   import { getValidated } from "./lib/api";
   import { Model } from "./lib/graph/model";
@@ -10,7 +11,8 @@
   import { Graph } from "./lib/schemas";
   import { ui } from "./lib/state.svelte";
   import { readHash, writeHash } from "./lib/view/hash";
-  import { TOP_BAR, type panzoom } from "./lib/view/panzoom";
+  import { isNarrow, overview } from "./lib/view/overview";
+  import { TOP_BAR, type Inset, type panzoom } from "./lib/view/panzoom";
   import { boundsOf } from "./lib/view/bounds";
   import { buildScene } from "./lib/view/scene";
 
@@ -28,19 +30,28 @@
 
   let notice = $state<string | null>(null); // an answer, e.g. "no request path": not an error
   const CARD_PX = 452; // card width + gutters (Card.svelte)
+  const SHEET = 0.58; // phone bottom sheet height, share of the viewport (Card.svelte)
 
-  /** Frame the focused unit and its peers (or a traced route) beside the card. */
+  /** What the open card covers: a side panel on a big screen, a bottom sheet on a phone. */
+  function cardInset(): Inset {
+    if (!ui.cardOpen) return { top: TOP_BAR };
+    return isNarrow() ? { top: TOP_BAR, bottom: innerHeight * SHEET } : { top: TOP_BAR, right: CARD_PX };
+  }
+  /** Frame the focused unit and its peers (or a traced route) in the uncovered part. */
   function frame() {
     if (!model || !scene) return;
-    const ids = ui.trace ? ui.trace.path : ui.selected ? [ui.selected, ...model.peers(ui.selected)] : [];
-    const edges = ui.trace ? ui.trace.edges : [];
-    const b = boundsOf(
-      ids,
-      scene.layout.nodes,
-      edges.map((i) => scene!.points.get(i) ?? []),
-    );
-    const right = ui.cardOpen && innerWidth > 900 ? CARD_PX : 0;
-    if (b) api?.fit(b, TOP_BAR, right, ui.trace ? 0.88 : 0.95, 1.1); // traces leave room for the toast
+    // phone: the unit alone (peers would shrink it to unreadable; the card lists them)
+    const focus = ui.selected && (isNarrow() ? [ui.selected] : [ui.selected, ...model.peers(ui.selected)]);
+    const ids = ui.trace ? ui.trace.path : focus || [];
+    const lines = (ui.trace?.edges ?? []).map((i) => scene!.points.get(i) ?? []);
+    const b = boundsOf(ids, scene.layout.nodes, lines);
+    if (b) api?.fit(b, cardInset(), ui.trace ? 0.88 : 0.95, 1.1); // traces leave room for the toast
+  }
+  const home = () => api && scene && overview(api, scene.layout);
+  /** Fly to one unit at reading zoom without changing the selection (route steps). */
+  function flyTo(id: string) {
+    const b = scene && boundsOf([id], scene.layout.nodes, [], 120);
+    if (b) api?.fit(b, { top: TOP_BAR, bottom: 120 }, 0.95, 1.1);
   }
   function pick(id: string | null) {
     if (!model) return;
@@ -88,8 +99,7 @@
     else if (e.key === "/") {
       e.preventDefault();
       toolbar?.focusSearch();
-    } else if (e.key === "f")
-      api?.fit({ x: 0, y: 0, w: scene!.layout.width, h: scene!.layout.height }, TOP_BAR);
+    } else if (e.key === "f") home();
     else if (e.key === "+" || e.key === "=") api?.zoomBy(1.25);
     else if (e.key === "-") api?.zoomBy(0.8);
   }
@@ -111,13 +121,16 @@
 
 <main>
   {#if model && scene}
-    <Map {model} layout={scene.layout} paths={scene.paths} {liveBy} onpick={pick} bind:api />
-    <Toolbar
-      bind:this={toolbar}
+    <!-- on a phone a tap also frames the unit, else the bottom sheet could cover it -->
+    <Map
       {model}
-      onpick={go}
-      onfit={() => api?.fit({ x: 0, y: 0, w: scene!.layout.width, h: scene!.layout.height }, TOP_BAR)}
+      layout={scene.layout}
+      paths={scene.paths}
+      {liveBy}
+      onpick={(id) => (id && isNarrow() ? go(id) : pick(id))}
+      bind:api
     />
+    <Toolbar bind:this={toolbar} {model} onpick={go} onfit={home} />
     {#if ui.selected && ui.cardOpen}
       <Card
         {model}
@@ -129,12 +142,7 @@
       />
     {/if}
     {#if ui.trace || notice}
-      <div class="toast" class:no={!!notice}>
-        {#if ui.trace}Route: {ui.trace.path
-            .map((id) => model!.nodes.get(id)!.label)
-            .join(" → ")}{:else}{notice}{/if}
-        <button onclick={() => pick(null)}>clear</button>
-      </div>
+      <RouteBar {model} path={ui.trace?.path ?? null} {notice} onstep={flyTo} onclear={() => pick(null)} />
     {/if}
   {:else if !error}
     <p class="status">loading the map…</p>
@@ -157,25 +165,5 @@
   }
   .err {
     color: var(--color-danger);
-  }
-  .toast {
-    position: absolute;
-    bottom: 16px;
-    left: 50%;
-    transform: translateX(-50%);
-    max-width: calc(100vw - 32px);
-    background: var(--color-panel);
-    border: 1px solid var(--color-signal);
-    padding: 8px 14px;
-    font: 600 16px var(--font-display);
-    letter-spacing: 0.04em;
-  }
-  .toast.no {
-    border-color: var(--color-danger);
-  }
-  .toast button {
-    margin-left: 12px;
-    color: var(--color-muted);
-    font: 12px var(--font-mono);
   }
 </style>

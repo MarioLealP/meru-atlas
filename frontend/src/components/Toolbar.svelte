@@ -8,6 +8,7 @@
   let { model, onpick, onfit }: { model: Model; onpick: (id: string) => void; onfit: () => void } = $props();
 
   let q = $state("");
+  let layersOpen = $state(false); // narrow screens: layer chips live in a dropdown
   let input: HTMLInputElement;
   const hits = $derived(
     q.trim()
@@ -52,7 +53,8 @@
     {/if}
   </div>
 
-  <div class="layers">
+  <button class="lines-btn" class:on={layersOpen} onclick={() => (layersOpen = !layersOpen)}>Lines</button>
+  <div class="layers" class:open={layersOpen}>
     {#each KINDS as [k, label] (k)}
       <button
         class:off={!ui.layers[k]}
@@ -175,5 +177,63 @@
   .live em {
     color: var(--color-danger);
     font-style: normal;
+  }
+  .lines-btn {
+    display: none;
+  }
+
+  /* phone / narrow: one row (brand, search, Lines, live dot); chips drop down on demand */
+  @media (max-width: 900px) {
+    .bar {
+      flex-wrap: nowrap;
+      gap: 10px;
+      padding: 8px 12px;
+      height: 56px;
+      background: var(--color-bg);
+      border-bottom: 1px solid var(--color-line);
+    }
+    .brand {
+      font-size: 20px;
+      white-space: nowrap;
+    }
+    .search {
+      flex: 1 1 auto;
+      min-width: 0;
+    }
+    .lines-btn {
+      display: block;
+      border: 1px solid var(--color-line);
+      padding: 6px 10px;
+      font: 600 14px var(--font-display);
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+    }
+    .lines-btn.on {
+      border-color: var(--color-signal);
+      color: var(--color-signal);
+    }
+    .layers {
+      display: none;
+      position: absolute;
+      top: 56px;
+      left: 0;
+      right: 0;
+      padding: 10px 12px;
+      background: var(--color-bg);
+      border-bottom: 1px solid var(--color-line);
+    }
+    .layers.open {
+      display: flex;
+    }
+    .layers button {
+      padding: 6px 10px;
+    }
+    .live {
+      font-size: 0;
+      margin-left: 0;
+    }
+    .live b {
+      font-size: 14px;
+    }
   }
 </style>

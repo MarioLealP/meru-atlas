@@ -1,7 +1,11 @@
 // dev-only: drive a headless Edge/Chrome over CDP: open a URL, print console + exceptions,
-// wait, optionally run a JS snippet, screenshot. Usage: node cdp-shot.mjs <port> <url> <out.png> [waitMs] [js]
+// wait, optionally run a JS snippet, screenshot.
+// Usage: node cdp-shot.mjs <port> <url> <out.png> [waitMs] [js|-] [WxH[m]]  (m = mobile/touch)
 import { writeFileSync } from "node:fs";
-const [port, url, out, wait = "6000", js] = process.argv.slice(2);
+const [port, url, out, wait = "6000", jsArg, size = "2560x1440"] = process.argv.slice(2);
+const js = jsArg === "-" ? undefined : jsArg;
+const [width, height] = size.replace("m", "").split("x").map(Number);
+const mobile = size.endsWith("m");
 const tabs = await (await fetch(`http://127.0.0.1:${port}/json/new?about:blank`, { method: "PUT" })).json();
 const ws = new WebSocket(tabs.webSocketDebuggerUrl);
 let id = 0;
@@ -29,11 +33,12 @@ await new Promise((r) => (ws.onopen = r));
 await send("Runtime.enable");
 await send("Log.enable");
 await send("Emulation.setDeviceMetricsOverride", {
-  width: 2560,
-  height: 1440,
-  deviceScaleFactor: 1,
-  mobile: false,
+  width,
+  height,
+  deviceScaleFactor: mobile ? 2 : 1,
+  mobile,
 });
+if (mobile) await send("Emulation.setTouchEmulationEnabled", { enabled: true });
 await send("Page.navigate", { url });
 await new Promise((r) => setTimeout(r, +wait));
 if (js) {

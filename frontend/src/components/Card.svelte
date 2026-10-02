@@ -95,6 +95,23 @@
     padding: 18px 20px;
     backdrop-filter: blur(6px);
   }
+  /* phone / narrow: a bottom sheet, the map stays visible above it */
+  @media (max-width: 900px) {
+    .card {
+      top: auto;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      width: auto;
+      max-height: 58vh;
+      border-left: 1px solid var(--color-line);
+      border-top: 4px solid var(--color-signal);
+      padding: 14px 16px calc(14px + env(safe-area-inset-bottom));
+    }
+    h2 {
+      font-size: 26px;
+    }
+  }
   header {
     position: relative;
     margin-bottom: 10px;
