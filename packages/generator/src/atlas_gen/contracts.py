@@ -1,4 +1,4 @@
-"""JSON Schema validation for the two data files the atlas consumes."""
+"""JSON Schema validation for the data files the atlas consumes."""
 
 import json
 from functools import cache
@@ -8,7 +8,7 @@ from typing import Any
 
 from jsonschema import Draft202012Validator
 
-SCHEMAS = ("graph", "status")
+SCHEMAS = ("graph", "status", "docs")
 
 
 def _schema_dir() -> Path:

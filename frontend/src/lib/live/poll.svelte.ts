@@ -1,6 +1,7 @@
 // Live status: pushed by /api/events (SSE, names only), with a slow poll as the fallback
 // while the stream is down. Data always comes from the validated GET; failure keeps the
-// last good data. `onGraph` runs when the lab itself changed (a new graph.json).
+// last good data. `onGraph` runs when the lab itself changed (a new graph.json), `onDocs`
+// when the docs pages did (a new docs.json).
 import { getValidated } from "../api";
 import { Status } from "../schemas";
 
@@ -19,7 +20,7 @@ class Live {
       this.error = (e as Error).message;
     }
   }
-  start(onGraph: () => void, everyMs = 60_000) {
+  start(onGraph: () => void, onDocs: () => void = () => {}, everyMs = 60_000) {
     void this.refresh();
     this.#timer = setInterval(
       () => !this.pushed && document.visibilityState === "visible" && void this.refresh(),
@@ -32,6 +33,7 @@ class Live {
     es.onerror = () => (this.pushed = false); // EventSource reconnects by itself
     es.addEventListener("status", () => void this.refresh());
     es.addEventListener("graph", onGraph);
+    es.addEventListener("docs", onDocs);
   }
   stop() {
     clearInterval(this.#timer);

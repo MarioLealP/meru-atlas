@@ -1,12 +1,24 @@
 <script lang="ts">
   import { onMount } from "svelte";
   import type { Model } from "../lib/graph/model";
-  import { entries, rank, type Entry } from "../lib/view/launcher";
+  import type { DocIndex } from "../lib/docs/pages";
+  import { docEntries, entries, rank, type Entry } from "../lib/view/launcher";
 
-  let { model, onshow, onclose }: { model: Model; onshow: (unit: string) => void; onclose: () => void } =
-    $props();
+  let {
+    model,
+    docs,
+    onshow,
+    ondoc,
+    onclose,
+  }: {
+    model: Model;
+    docs: DocIndex | null;
+    onshow: (unit: string) => void;
+    ondoc: (id: string) => void;
+    onclose: () => void;
+  } = $props();
 
-  const all = $derived(entries(model));
+  const all = $derived([...entries(model), ...docEntries(docs?.d.pages ?? [])]);
   let q = $state("");
   let cur = $state(0);
   let input: HTMLInputElement;
@@ -20,7 +32,8 @@
   /** Enter: open the link (new tab), or show a link-less unit; Shift+Enter: show on the map. */
   function choose(e: Entry | undefined, onMap: boolean) {
     if (!e) return;
-    if (e.url && !onMap) window.open(e.url, "_blank", "noopener,noreferrer");
+    if (e.doc) ondoc(e.doc);
+    else if (e.url && !onMap) window.open(e.url, "_blank", "noopener,noreferrer");
     else onshow(e.unit);
     onclose();
   }
@@ -53,10 +66,10 @@
       bind:value={q}
       onkeydown={onkey}
       placeholder="Open… (Enter opens, Shift+Enter shows on the map)"
-      aria-label="Search units and links"
+      aria-label="Search units, links and docs"
     />
     <ul class="mt-2 max-h-[60vh] overflow-y-auto">
-      {#each hits as e, i (e.unit + e.title)}
+      {#each hits as e, i (e.unit + e.title + (e.doc ?? ""))}
         <li>
           <button
             class={[
@@ -67,7 +80,7 @@
             onclick={(ev) => choose(e, ev.shiftKey)}
           >
             <span class="font-display text-lg font-semibold">{e.title}</span>
-            <span class="ef-label truncate normal-case">{e.url ? e.hint : `map · ${e.hint}`}</span>
+            <span class="ef-label truncate normal-case">{e.url || e.doc ? e.hint : `map · ${e.hint}`}</span>
           </button>
         </li>
       {:else}

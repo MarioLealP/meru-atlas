@@ -2,6 +2,7 @@
   import { onMount } from "svelte";
   import Card from "./components/Card.svelte";
   import Catalogue from "./components/Catalogue.svelte";
+  import Docs from "./components/Docs.svelte";
   import Map from "./components/Map.svelte";
   import ExposureBar from "./components/ExposureBar.svelte";
   import Launcher from "./components/Launcher.svelte";
@@ -9,6 +10,7 @@
   import RouteBar from "./components/RouteBar.svelte";
   import Toolbar from "./components/Toolbar.svelte";
   import { getValidated } from "./lib/api";
+  import { docs } from "./lib/docs/store.svelte";
   import { Model } from "./lib/graph/model";
   import { unitLive, type UnitLive } from "./lib/live/health";
   import { live } from "./lib/live/poll.svelte";
@@ -95,10 +97,18 @@
     pick(id);
     frame();
   }
-  function setView(v: "map" | "list") {
-    if (v === "list") pick(null);
+  function setView(v: "map" | "list" | "docs") {
+    if (v !== "map") pick(null);
     ui.view = v;
-    writeHash(v === "list" ? { list: true } : {});
+    ui.doc = null;
+    writeHash(v === "list" ? { list: true } : v === "docs" ? { doc: true } : {});
+  }
+  /** Open a docs page (null = the page list) in the Docs view. */
+  function openDoc(id: string | null) {
+    if (ui.view !== "docs") pick(null);
+    ui.view = "docs";
+    ui.doc = id;
+    writeHash({ doc: id ?? true });
   }
   function startTrace(from: string) {
     ui.trace = null;
@@ -108,7 +118,8 @@
   function applyHash() {
     if (!model) return;
     const d = readHash();
-    if (d.list) setView("list");
+    if (d.doc) openDoc(d.doc === true ? null : d.doc);
+    else if (d.list) setView("list");
     else if (d.route && model.nodes.has(d.route[0]) && model.nodes.has(d.route[1])) {
       ui.traceFrom = d.route[0];
       pick(d.route[1]);
@@ -181,7 +192,11 @@
 
   onMount(() => {
     void loadGraph();
-    live.start(() => void loadGraph());
+    void docs.refresh();
+    live.start(
+      () => void loadGraph(),
+      () => void docs.refresh(),
+    );
     return () => live.stop();
   });
 </script>
@@ -193,6 +208,9 @@
     <!-- a tap on a box never moves or zooms the map (Mario, 2026-10-02); only list picks fly -->
     <Map {model} layout={scene.layout} paths={scene.paths} {liveBy} {lens} onpick={tap} bind:api />
     {#if ui.view === "list"}<Catalogue {model} {liveBy} onshow={go} />{/if}
+    {#if ui.view === "docs"}
+      <Docs index={docs.index} current={ui.doc} error={docs.error} onopen={openDoc} onmap={go} />
+    {/if}
     {#if !stopWall}
       <Toolbar bind:this={toolbar} {model} onpick={go} onfit={home} onview={setView} onwall={toggleWall} />
     {/if}
@@ -201,7 +219,9 @@
         {model}
         id={ui.selected}
         live={liveBy.get(ui.selected)}
+        docs={docs.index}
         onpick={go}
+        onopendoc={openDoc}
         ontrace={startTrace}
         onclose={() => (ui.cardOpen = false)}
       />
@@ -220,7 +240,9 @@
         onclose={() => (ui.lens = null)}
       />
     {/if}
-    {#if launcher}<Launcher {model} onshow={go} onclose={() => (launcher = false)} />{/if}
+    {#if launcher}
+      <Launcher {model} docs={docs.index} onshow={go} ondoc={openDoc} onclose={() => (launcher = false)} />
+    {/if}
   {:else if !error}
     <p class="ef-label absolute bottom-4 left-4">loading the map…</p>
   {/if}

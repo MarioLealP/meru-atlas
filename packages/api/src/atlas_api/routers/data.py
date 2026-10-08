@@ -24,3 +24,8 @@ def graph(request: Request) -> JSONResponse:
 @router.get("/status")
 def status(request: Request) -> JSONResponse:
     return _serve(request, "status")
+
+
+@router.get("/docs")
+def docs(request: Request) -> JSONResponse:
+    return _serve(request, "docs")

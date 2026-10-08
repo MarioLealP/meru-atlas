@@ -1,6 +1,6 @@
-"""GET /api/events: Server-Sent Events saying WHICH file changed ("status" / "graph").
+"""GET /api/events: Server-Sent Events saying WHICH file changed ("status" / "graph" / "docs").
 
-Names only, never data: the page refetches through /api/status and /api/graph, so every
+Names only, never data: the page refetches through /api/status, /api/graph and /api/docs, so every
 byte it shows still goes through schema validation and the SSO guard. Each connection is
 bounded (EventSource reconnects by itself), so a dead client can't hold a task forever.
 """
@@ -17,7 +17,8 @@ router = APIRouter(prefix="/api")
 
 async def _stream(request: Request) -> AsyncIterator[str]:
     s = request.app.state.settings
-    files = {"status": request.app.state.status, "graph": request.app.state.graph}
+    st = request.app.state
+    files = {"status": st.status, "graph": st.graph, "docs": st.docs}
     seen = {name: f.mtime_ns() for name, f in files.items()}
     start = last_out = time.monotonic()
     yield "retry: 5000\n\n"

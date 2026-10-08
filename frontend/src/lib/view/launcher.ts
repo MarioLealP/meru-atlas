@@ -2,7 +2,7 @@
 // ranked against what you type. Pure, tested.
 import type { Model } from "../graph/model";
 
-export type Entry = { unit: string; title: string; hint: string; url?: string };
+export type Entry = { unit: string; title: string; hint: string; url?: string; doc?: string };
 
 export function entries(m: Model): Entry[] {
   return [...m.nodes.values()].flatMap((n): Entry[] => {
@@ -36,4 +36,9 @@ export function rank(all: Entry[], query: string, max = 10): Entry[] {
     .sort((a, b) => b.s - a.s || Number(!a.e.url) - Number(!b.e.url) || a.e.title.localeCompare(b.e.title))
     .slice(0, max)
     .map((x) => x.e);
+}
+
+/** Docs pages as launcher entries: Enter opens the page in the Docs view. */
+export function docEntries(pages: { id: string; title: string; kind: string }[]): Entry[] {
+  return pages.map((p) => ({ unit: "", title: p.title, hint: `docs · ${p.kind}`, doc: p.id }));
 }

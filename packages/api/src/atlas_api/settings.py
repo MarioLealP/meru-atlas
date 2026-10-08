@@ -14,6 +14,8 @@ class Settings(BaseSettings):
 
     graph_file: Path = Path("/data/graph.json")
     status_file: Path = Path("/data/live/status.json")
+    # docs.json is generated next to graph.json (infra repo atlas/); unset = that sibling
+    docs_file: Path | None = None
     # Caddy's forward-auth injects this header after SSO; requests without it are
     # refused (fail closed if a route ever bypasses the gate). Dev mode skips it.
     identity_header: str = "X-Authentik-Username"

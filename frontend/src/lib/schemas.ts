@@ -103,3 +103,39 @@ export const Status = z.object({
 export type Status = z.infer<typeof Status>;
 export type Problem = z.infer<typeof Problem>;
 export type Container = z.infer<typeof Container>;
+
+// Docs (docs.schema.json): the infra repo's docs pages, linked both ways and pre-rendered by
+// atlas_gen (markdown-it, raw HTML disabled). Optional: the map works without it.
+const RelKind = z.enum([
+  "runs-on",
+  "part-of",
+  "reports-to",
+  "talks-to",
+  "cert-from",
+  "devices",
+  "mentions",
+  "embeds",
+]);
+const Block = z.union([z.object({ html: z.string() }), z.object({ embed: z.string() })]);
+export const DocPage = z.object({
+  id: z.string(),
+  title: z.string(),
+  kind: z.enum(["app", "component", "device", "topic", "access"]),
+  path: z.string(),
+  node: z.string().optional(),
+  status: z.enum(["active", "temporary", "retire", "junk?"]),
+  verified: z.iso.date(),
+  installed_by: z.string().optional(),
+  relations: z.array(z.object({ kind: RelKind, to: z.string() })),
+  backrefs: z.array(z.object({ kind: RelKind, from: z.string() })),
+  children: z.array(z.string()),
+  sections: z.array(z.object({ title: z.string(), blocks: z.array(Block) })),
+});
+export type DocPage = z.infer<typeof DocPage>;
+export type RelKind = z.infer<typeof RelKind>;
+export const Docs = z.object({
+  schema_version: z.literal(1),
+  pages: z.array(DocPage),
+  uncovered_nodes: z.array(z.string()),
+});
+export type Docs = z.infer<typeof Docs>;

@@ -55,3 +55,14 @@ def test_no_api_docs_exposed(client):
     c, _ = client
     for p in ("/docs", "/redoc", "/openapi.json"):
         assert c.get(p, headers=ID).status_code == 404
+
+
+def test_docs_served_validated_and_503_when_absent(client):
+    c, tmp = client
+    assert c.get("/api/docs", headers=ID).status_code == 503  # no docs.json yet: the map still works
+    (tmp / "docs.json").write_text(json.dumps({"schema_version": 1, "pages": [], "uncovered_nodes": []}))
+    assert c.get("/api/docs").status_code == 403
+    r = c.get("/api/docs", headers=ID)
+    assert r.status_code == 200 and r.json()["pages"] == []
+    (tmp / "docs.json").write_text(json.dumps({"schema_version": 1, "pages": [{"id": "x"}]}))
+    assert c.get("/api/docs", headers=ID).status_code == 503

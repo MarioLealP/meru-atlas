@@ -14,6 +14,7 @@ def create_app(settings: Settings | None = None) -> FastAPI:
     app.state.settings = s
     app.state.graph = DataFile(s.graph_file, "graph")
     app.state.status = DataFile(s.status_file, "status")
+    app.state.docs = DataFile(s.docs_file or s.graph_file.with_name("docs.json"), "docs")
     app.middleware("http")(identity_guard(s.identity_header, s.dev_mode))
     app.include_router(health.router)
     app.include_router(data.router)

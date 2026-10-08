@@ -15,7 +15,7 @@
     model: Model;
     onpick: (id: string) => void;
     onfit: () => void;
-    onview: (v: "map" | "list") => void;
+    onview: (v: "map" | "list" | "docs") => void;
     onwall: () => void;
   } = $props();
 
@@ -56,8 +56,21 @@
     <button class="ef-tab px-2 lg:px-4" role="tab" aria-selected={onMap} onclick={() => onview("map")}>
       Map
     </button>
-    <button class="ef-tab px-2 lg:px-4" role="tab" aria-selected={!onMap} onclick={() => onview("list")}>
+    <button
+      class="ef-tab px-2 lg:px-4"
+      role="tab"
+      aria-selected={ui.view === "list"}
+      onclick={() => onview("list")}
+    >
       Catalogue
+    </button>
+    <button
+      class="ef-tab px-2 lg:px-4"
+      role="tab"
+      aria-selected={ui.view === "docs"}
+      onclick={() => onview("docs")}
+    >
+      Docs
     </button>
   </div>
 
