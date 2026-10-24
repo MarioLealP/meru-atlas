@@ -118,5 +118,5 @@ def build(repo: Path, overlay_path: Path | None = None, with_commit: bool = Fals
         "warnings": j.warnings,
     }
     if with_commit and (sha := _commit(repo)):
-        graph["source"] = {"repo": "Benylin/clockmost-infra", "commit": sha}
+        graph["source"] = {"repo": "MarioGLealP/clockmost-infra", "commit": sha}
     return graph

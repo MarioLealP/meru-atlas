@@ -2,7 +2,7 @@
 // its Zabbix data, its last hour of logs, a copyable `docker logs` command. Pure.
 import type { Node } from "./model";
 
-const GIT = "https://git.clockmost.com/Benylin/clockmost-infra/src/branch/main/projects";
+const GIT = "https://git.clockmost.com/MarioGLealP/clockmost-infra/src/branch/main/projects";
 const ZABBIX = "https://zabbix.clockmost.com/zabbix.php";
 const LOGS = "https://logs.clockmost.com/web/logs";
 

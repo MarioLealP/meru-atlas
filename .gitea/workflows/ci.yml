@@ -49,4 +49,4 @@ jobs:
           uv version --package atlas-gen "0.1.${{ github.run_number }}"
           uv build --package atlas-gen --out-dir dist
           ./scripts/secret-scan.sh dist
-          uv publish --publish-url https://git.clockmost.com/api/packages/benylin/pypi dist/*
+          uv publish --publish-url https://git.clockmost.com/api/packages/marioglealp/pypi dist/*
