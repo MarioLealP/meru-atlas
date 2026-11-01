@@ -1,5 +1,7 @@
-"""Read graph.json / status.json from their read-only mounts, validated, cached by mtime."""
+"""Read graph.json / status.json / docs.json from their read-only mounts, validated, cached by mtime.
+A path ending in .gz is read gzipped (Meru sends docs.json that way: Kubernetes objects stop at 1 MiB)."""
 
+import gzip
 import json
 from pathlib import Path
 from typing import Any
@@ -38,7 +40,8 @@ class DataFile:
         if self._cache and self._cache.mtime_ns == m:
             return self._cache.doc
         try:
-            doc = json.loads(self.path.read_text(encoding="utf-8"))
+            raw = self.path.read_bytes()
+            doc = json.loads(gzip.decompress(raw) if self.path.suffix == ".gz" else raw)
         except (OSError, ValueError) as e:
             raise DataUnavailable(f"{self.schema}: unreadable ({type(e).__name__})") from e
         if errs := contracts.errors(self.schema, doc):
