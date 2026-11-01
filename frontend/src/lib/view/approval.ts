@@ -1,15 +1,18 @@
 // How an Approve / Deny ended (D98). Janus sends the browser back to #v=requests with a fixed result code and a
 // few checked fields; the words live here, so a crafted link can only pick one of these messages.
 export type Decision = "approve" | "deny";
+export type Said = Decision | "remove"; // Remove = a removal PR approved in the same click (J3)
 export type Outcome = {
   result: Result;
   pr?: number;
-  decision?: Decision;
+  decision?: Said;
   by?: string;
   commit?: string;
 };
 const RESULTS = [
   "done",
+  "not-on-main",
+  "already-removed",
   "not-atlas",
   "not-approver",
   "bad-button",
@@ -38,7 +41,7 @@ export function readOutcome(h = location.hash): Outcome | null {
   return {
     result,
     pr: Number.isInteger(pr) && pr > 0 ? pr : undefined,
-    decision: decision === "approve" || decision === "deny" ? decision : undefined,
+    decision: decision === "approve" || decision === "deny" || decision === "remove" ? decision : undefined,
     by: by && USER.test(by) ? by : undefined,
     commit: commit && SHA.test(commit) ? commit : undefined,
   };
@@ -48,10 +51,19 @@ export type Message = { tone: "ok" | "crit"; title: string; text: string };
 
 export function describe(o: Outcome): Message {
   const pr = o.pr ? `#${o.pr}` : "the request";
-  const verb = o.decision === "deny" ? "Deny" : "Approve";
+  const verb = o.decision === "deny" ? "Deny" : o.decision === "remove" ? "Remove" : "Approve";
   const no = (text: string): Message => ({ tone: "crit", title: `${verb} on ${pr} didn't go through`, text });
   switch (o.result) {
     case "done":
+      if (o.decision === "remove")
+        return {
+          tone: "ok",
+          title: `${pr} removal approved`,
+          text:
+            `Approved by ${o.by ?? "you"} - removed: true is on Meru/requests main` +
+            (o.commit ? ` in ${o.commit.slice(0, 12)}` : "") +
+            ". Xolotl and Shikigami retire it next.",
+        };
       return o.decision === "deny"
         ? { tone: "ok", title: `${pr} denied`, text: `Denied by ${o.by ?? "you"} - the PR is closed.` }
         : {
@@ -62,6 +74,10 @@ export function describe(o: Outcome): Message {
               (o.commit ? ` in ${o.commit.slice(0, 12)}` : "") +
               ". Shikigami builds it next.",
           };
+    case "not-on-main":
+      return no("That request isn't on Meru/requests main (any more). Refresh the list.");
+    case "already-removed":
+      return no("It's already marked removed on main - its retirement is under way or done.");
     case "not-atlas":
       return no("The click didn't come from the atlas's own page, so nothing started.");
     case "not-approver":

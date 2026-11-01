@@ -153,3 +153,12 @@ export const Pending = z.object({
 });
 export type Pending = z.infer<typeof Pending>;
 export const PendingList = z.array(Pending);
+// What's on Meru/requests main (J3): the apps and databases Meru runs, and the retired ones.
+export const OnMain = z.object({
+  path: z.string().regex(/^(apps|databases)\/[a-z0-9]([-a-z0-9]*[a-z0-9])?\.yaml$/),
+  kind: z.enum(["app", "database"]),
+  name: z.string(),
+  removed: z.boolean(),
+});
+export type OnMain = z.infer<typeof OnMain>;
+export const OnMainList = z.array(OnMain);

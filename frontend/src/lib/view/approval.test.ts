@@ -43,6 +43,13 @@ group("describe", () => {
     expect(approved.text).toBe(
       "Approved by akadmin - on Meru/requests main in aaaaaaaaaaaa. Shikigami builds it next.",
     );
+    expect(describe({ result: "done", pr: 13, decision: "remove", by: "akadmin" }).title).toBe(
+      "#13 removal approved",
+    );
+    expect(readOutcome("#res=already-removed&dec=remove")).toMatchObject({
+      result: "already-removed",
+      decision: "remove",
+    });
     const changed = describe({ result: "changed", pr: 7, decision: "approve" });
     expect(changed).toMatchObject({ tone: "crit", title: "Approve on #7 didn't go through" });
   });

@@ -3,16 +3,19 @@
   // in a dialog; the dialog's confirm is a plain form post, not fetch(): it has to be a real page navigation -
   // Janus answers with a redirect to Authentik's silent check and sets its short anti-forgery cookie, and at the
   // end sends the browser back here with how it went (ui.outcome). No token or code is ever seen by this code.
+  // Remove (J3) is the same: Janus opens the removal PR in Mario's name and approves it in the same click.
   import { onMount } from "svelte";
   import { getValidated } from "../lib/api";
-  import { PendingList, type Pending } from "../lib/schemas";
+  import { OnMainList, PendingList, type OnMain, type Pending } from "../lib/schemas";
   import { ui } from "../lib/state.svelte";
   import { describe, type Decision } from "../lib/view/approval";
 
   let items = $state<Pending[] | null>(null);
+  let onMain = $state<OnMain[] | null>(null);
   let error = $state<string | null>(null);
   let loading = $state(false);
-  let asking = $state<{ r: Pending; decision: Decision } | null>(null);
+  type Asking = { r: Pending; decision: Decision } | { app: OnMain };
+  let asking = $state<Asking | null>(null);
   let dialog = $state<HTMLDialogElement>();
 
   const message = $derived(ui.outcome ? describe(ui.outcome) : null);
@@ -20,7 +23,10 @@
   async function load() {
     loading = true;
     try {
+      // the On main list is its own fetch: when it fails (an older Janus) only that list is missing
+      const apps = getValidated("/api/janus/apps", OnMainList).catch(() => null);
       items = await getValidated("/api/janus/requests", PendingList);
+      onMain = await apps;
       error = null;
     } catch (e) {
       error = e instanceof Error ? e.message : String(e);
@@ -30,8 +36,8 @@
   }
   onMount(load);
 
-  function ask(r: Pending, decision: Decision) {
-    asking = { r, decision };
+  function ask(a: Asking) {
+    asking = a;
     dialog?.showModal();
   }
 
@@ -98,14 +104,41 @@
             <div class="flex flex-wrap gap-2">
               <a class="ef-btn ef-btn--ghost" href={r.url} target="_blank" rel="noopener noreferrer">Review</a
               >
-              <button class="ef-btn ef-btn--danger" onclick={() => ask(r, "deny")}>Deny</button>
-              <button class="ef-btn ef-btn--primary" onclick={() => ask(r, "approve")}>Approve</button>
+              <button class="ef-btn ef-btn--danger" onclick={() => ask({ r, decision: "deny" })}>Deny</button>
+              <button class="ef-btn ef-btn--primary" onclick={() => ask({ r, decision: "approve" })}
+                >Approve</button
+              >
             </div>
           </li>
         {:else}
           <li class="text-ink-3">Nothing waiting for approval.</li>
         {/each}
       </ul>
+
+      {#if onMain}
+        <h3 class="ef-sec-head mt-10 mb-3 font-display text-xl font-bold uppercase lg:text-2xl">
+          <span class="ef-idx">02</span>On main
+        </h3>
+        <p class="mb-4 max-w-[80ch] text-ink-2">
+          What Meru runs. Remove retires one: the removal goes on main with your approval in one click, then
+          Xolotl and Shikigami stop it, park its data and take its trust away.
+        </p>
+        <ul class="grid gap-2 lg:grid-cols-2">
+          {#each onMain as a (a.path)}
+            <li class={["ef-card flex items-center gap-3 p-3", a.removed && "opacity-60"]}>
+              <div class="min-w-0 flex-1">
+                <div class="ef-card__title break-words">{a.name}</div>
+                <div class="ef-card__meta mt-1 font-mono">{a.path}</div>
+              </div>
+              {#if a.removed}
+                <span class="ef-tag">removed</span>
+              {:else}
+                <button class="ef-btn ef-btn--danger" onclick={() => ask({ app: a })}>Remove</button>
+              {/if}
+            </li>
+          {/each}
+        </ul>
+      {/if}
     {/if}
   </section>
 </div>
@@ -116,7 +149,24 @@
   class="ef-modal m-auto w-[min(28rem,calc(100%-2rem))] p-0 text-ink backdrop:bg-ground/70 backdrop:backdrop-blur-sm"
   onclose={() => (asking = null)}
 >
-  {#if asking}
+  {#if asking && "app" in asking}
+    {@const a = asking.app}
+    <div class="ef-modal__head">
+      <h4>Remove {a.name}?</h4>
+    </div>
+    <div class="ef-modal__body flex flex-col gap-3">
+      <p class="font-mono text-sm text-ink">{a.path}</p>
+      <p>
+        Janus opens the removal in your name and approves it with the same Authentik check as Approve. Xolotl
+        and Shikigami then stop it, park its data and take its trust away.
+      </p>
+      <form class="flex justify-end gap-2" method="post" action="/api/janus/approve/remove">
+        <input type="hidden" name="path" value={a.path} />
+        <button class="ef-btn ef-btn--ghost" type="button" onclick={() => dialog?.close()}>Cancel</button>
+        <button class="ef-btn ef-btn--danger" type="submit">Remove</button>
+      </form>
+    </div>
+  {:else if asking && "r" in asking}
     {@const deny = asking.decision === "deny"}
     <div class="ef-modal__head">
       <h4>{deny ? "Deny" : "Approve"} #{asking.r.pr}?</h4>
