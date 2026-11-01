@@ -1,7 +1,8 @@
 """Join repo facts with the overlay: who owns which container/route, unsorted units, warnings."""
 
-from dataclasses import dataclass, field
 from typing import Any
+
+from pydantic import BaseModel, Field
 
 from atlas_gen.labels import safe_id
 from atlas_gen.parsers.caddy import Route
@@ -10,11 +11,10 @@ from atlas_gen.parsers.compose import Container
 UNSORTED = "unsorted"
 
 
-@dataclass
-class Joined:
+class Joined(BaseModel):
     nodes: list[dict[str, Any]]
     owner: dict[str, str]  # container name / service alias / route target host -> node id
-    warnings: list[str] = field(default_factory=list)
+    warnings: list[str] = Field(default_factory=list)
 
 
 def join(overlay_nodes: list[dict[str, Any]], cts: dict[str, Container], routes: list[Route]) -> Joined:
@@ -48,7 +48,7 @@ def join(overlay_nodes: list[dict[str, Any]], cts: dict[str, Container], routes:
             owner[r.target_host] = nid
     if names := sorted({n["label"] for n in nodes if n["zone"] == UNSORTED}):
         warnings.append(f"Unsorted: {', '.join(names)}. Add them to atlas/overlay.yaml.")
-    return Joined(nodes, owner, warnings)
+    return Joined(nodes=nodes, owner=owner, warnings=warnings)
 
 
 def _unsorted(nid: str, label: str, sub: str, **claims: list[str]) -> dict[str, Any]:

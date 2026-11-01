@@ -5,14 +5,16 @@ read or emitted (only application name, slug and launch URL are used).
 """
 
 import re
-from dataclasses import dataclass
 from pathlib import Path
+
+from pydantic import BaseModel, ConfigDict
 
 from atlas_gen.parsers.yamlio import load_all
 
 
-@dataclass(frozen=True)
-class SsoApp:
+class SsoApp(BaseModel):
+    model_config = ConfigDict(frozen=True)
+
     host: str
     app: str
     kind: str  # "OIDC" | "SAML" | "forward-auth" | "?"

@@ -1,19 +1,21 @@
 """projects/*/compose.yaml -> containers (name -> project, service, image, networks, ports, mem)."""
 
-from dataclasses import dataclass, field
 from pathlib import Path
+
+from pydantic import BaseModel, ConfigDict
 
 from atlas_gen.parsers.yamlio import load_all
 
 
-@dataclass(frozen=True)
-class Container:
+class Container(BaseModel):
+    model_config = ConfigDict(frozen=True)
+
     name: str
     project: str
     service: str
     image: str
     networks: tuple[str, ...]
-    ports: tuple[str, ...] = field(default=())
+    ports: tuple[str, ...] = ()
     mem: str = ""
 
 

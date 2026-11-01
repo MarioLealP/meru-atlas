@@ -1,9 +1,10 @@
 """Read graph.json / status.json from their read-only mounts, validated, cached by mtime."""
 
 import json
-from dataclasses import dataclass
 from pathlib import Path
 from typing import Any
+
+from pydantic import BaseModel, ConfigDict
 
 from atlas_gen import contracts
 
@@ -12,8 +13,9 @@ class DataUnavailable(RuntimeError):
     """The file is missing or doesn't match its schema (never serve unvalidated data)."""
 
 
-@dataclass
-class _Entry:
+class _Entry(BaseModel):
+    model_config = ConfigDict(frozen=True)
+
     mtime_ns: int
     doc: Any
 
@@ -41,5 +43,5 @@ class DataFile:
             raise DataUnavailable(f"{self.schema}: unreadable ({type(e).__name__})") from e
         if errs := contracts.errors(self.schema, doc):
             raise DataUnavailable(f"{self.schema}: schema violation: {errs[0]}")
-        self._cache = _Entry(m, doc)
+        self._cache = _Entry(mtime_ns=m, doc=doc)
         return doc

@@ -2,12 +2,14 @@
 
 import re
 from collections.abc import Iterator
-from dataclasses import dataclass
 from pathlib import Path
 
+from pydantic import BaseModel, ConfigDict
 
-@dataclass(frozen=True)
-class Route:
+
+class Route(BaseModel):
+    model_config = ConfigDict(frozen=True)
+
     host: str
     matcher: str
     target: str  # "name:port", "ip:port" or "static files"
@@ -41,5 +43,5 @@ def parse(repo: Path) -> list[Route]:
         gated = "import authentik_forward" in body
         partial = gated and bool(re.search(r"handle @[\w-]+\s*\{\s*reverse_proxy", body))
         gate = "sso-partial" if partial else ("sso" if gated else "")
-        routes += [Route(h, name, target, gate) for h in hosts[name]]
+        routes += [Route(host=h, matcher=name, target=target, gate=gate) for h in hosts[name]]
     return routes

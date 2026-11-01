@@ -1,20 +1,20 @@
 """atlas/overlay.yaml: the hand-written half (zones, descriptions, why-edges, forwards)."""
 
-from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Any
+
+from pydantic import BaseModel, Field
 
 from atlas_gen.parsers.yamlio import load_all
 
 STRIP_ZONES = {"plat"}  # full-width strip below the columns
 
 
-@dataclass
-class Overlay:
+class Overlay(BaseModel):
     zones: list[dict[str, Any]]
     nodes: list[dict[str, Any]]
     edges: list[list[str]]
-    router_forwards: list[dict[str, Any]] = field(default_factory=list)
+    router_forwards: list[dict[str, Any]] = Field(default_factory=list)
     zabbix_server_hostid: str = ""
 
 

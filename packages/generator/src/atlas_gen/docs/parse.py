@@ -1,12 +1,11 @@
 """Split one page file into frontmatter + `## ` sections, and find its [[links]]."""
 
 import re
-from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Any
 
 import yaml
-from pydantic import ValidationError
+from pydantic import BaseModel, Field, ValidationError
 
 from atlas_gen.docs.model import ID, REQUIRED_SECTIONS, SECTIONS, Frontmatter
 
@@ -15,14 +14,13 @@ LINK = re.compile(r"(!?)\[\[([^\]|]+)(?:\|([^\]]+))?\]\]")
 EMBED_LINE = re.compile(r"^!\[\[([a-z0-9][a-z0-9-]*)\]\]\s*$")
 
 
-@dataclass
-class Page:
+class Page(BaseModel):
     id: str
     path: str  # relative to the repo root
     fm: Frontmatter | None
     sections: list[tuple[str, str]]  # (title, markdown body)
-    links: list[tuple[str, str]] = field(default_factory=list)  # ("mentions"|"embeds", target id)
-    errors: list[str] = field(default_factory=list)
+    links: list[tuple[str, str]] = Field(default_factory=list)  # ("mentions"|"embeds", target id)
+    errors: list[str] = Field(default_factory=list)
 
 
 def _sections(body: str, where: str, errors: list[str]) -> list[tuple[str, str]]:
@@ -59,7 +57,9 @@ def parse(path: Path, repo: Path) -> Page:
     errors: list[str] = []
     m = FRONTMATTER.match(path.read_text(encoding="utf-8-sig").replace("\r\n", "\n"))
     if not m:
-        return Page(path.stem, rel, None, [], errors=[f"{rel}: no `---` frontmatter block"])
+        return Page(
+            id=path.stem, path=rel, fm=None, sections=[], errors=[f"{rel}: no `---` frontmatter block"]
+        )
     fm: Frontmatter | None = None
     try:
         raw: Any = yaml.safe_load(m.group(1)) or {}
@@ -83,4 +83,6 @@ def parse(path: Path, repo: Path) -> Page:
     errors += [f"{rel}: missing section `## {t}`" for t in REQUIRED_SECTIONS if t not in titles]
     if not re.fullmatch(ID, path.stem):
         errors.append(f"{rel}: file name must be a page id (lowercase, digits, -)")
-    return Page(path.stem, rel, fm, sections, _links(sections, rel, errors), errors)
+    return Page(
+        id=path.stem, path=rel, fm=fm, sections=sections, links=_links(sections, rel, errors), errors=errors
+    )
