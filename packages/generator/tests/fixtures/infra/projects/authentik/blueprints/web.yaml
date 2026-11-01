@@ -1,0 +1,12 @@
+version: 1
+entries:
+  - model: authentik_providers_oauth2.oauth2provider
+    identifiers: { name: web }
+    attrs:
+      client_secret: !Env SUPER_SECRET_DO_NOT_LEAK
+  - model: authentik_core.application
+    identifiers: { slug: web }
+    attrs: { name: Web, meta_launch_url: "https://web.clockmost.com" }
+  - model: authentik_core.application
+    state: absent
+    identifiers: { slug: retired }

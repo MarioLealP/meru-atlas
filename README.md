@@ -1,34 +1,68 @@
-# atlas
+# clockmost atlas
 
-The clockmost atlas - the map of what runs where, and Meru's front door (Janus)
+The live, repo-generated map **and home page** of the clockmost home lab:
+every service, how it connects, how you log in to it, and its live health, at
+`https://atlas.clockmost.com` (SSO, admins only, LAN/VPN only).
 
-A Meru app, made from the [Meru/nuwa-python](https://git.clockmost.com/Meru/nuwa-python) template: a FastAPI service
-with one endpoint, `GET /heartbeat` -> `ok`, to grow from.
+Plan, security model and decisions: `runbooks/clockmost-atlas-project.md` on Mario's
+workspace. **Status: phase 0 (foundations).** The live site is still the v0 atlas in
+the infra repo (`atlas/`) until the phase 4 cutover.
 
-## Run locally
+## How it fits together
 
-```sh
-uv sync
-uv run uvicorn --app-dir src atlas.app:app --port 8080
-curl localhost:8080/heartbeat
 ```
+infra repo ──CI──▶ graph.json ─┐                       (structure, generated)
+host collector ──▶ status.json ┤ read-only mounts      (live, every minute)
+                               ▼
+        browser ─▶ Caddy (SSO) ─▶ atlas container: SPA + read-only /api
+```
+
+The container is on **one** network (Caddy's `front-atlas`), holds no Docker socket,
+no tokens, and initiates no connections. Data arrives as files.
+
+## Layout
+
+| path | what |
+|---|---|
+| `schemas/` | JSON Schemas: the data contract (`graph`, `status`) |
+| `packages/generator/` | `atlas_gen`: builds `graph.json` from the infra repo (phase 1), validates data |
+| `packages/api/` | `atlas_api`: FastAPI backend, read-only, SSO-identity guard, CSP |
+| `frontend/` | Svelte 5 + TypeScript + Tailwind v4, zod-validated API client, ELK layout (phase 2) |
+| `scripts/secret-scan.sh` | fails CI if anything secret-shaped reaches the bundle or data |
 
 ## Development
 
-```sh
-scripts/check.sh   # lint, format, types, lockfile, tests - exactly what CI runs
+Prerequisites: [uv](https://docs.astral.sh/uv/) ≥ 0.12, Python 3.13, Node ≥ 20.19.
+
+```bash
+git clone git@git.clockmost.com:MarioGLealP/clockmost-atlas.git && cd clockmost-atlas
+
+# python (generator + api)
+uv sync --all-packages
+uv run ruff format --check . && uv run ruff check . && uv run pytest -q
+
+# frontend
+cd frontend && npm ci --ignore-scripts
+npm run format:check && npm run check && npm run build
+
+# run locally (dev mode skips the SSO-identity check)
+ATLAS_DEV_MODE=true ATLAS_GRAPH_FILE=packages/generator/tests/fixtures/graph.min.json \
+ATLAS_STATUS_FILE=packages/generator/tests/fixtures/status.min.json \
+  uv run uvicorn atlas_api.main:create_app --factory --reload
+cd frontend && npm run dev   # proxies /api to :8000
 ```
 
-## Deploy
+Validate a data file: `uv run atlas-gen validate status /var/lib/clockmost-atlas/status.json`.
 
-`deploy/meru.yaml` makes this repo a Meru app: [Meru/meru](https://git.clockmost.com/Meru/meru) finds it and deploys it
-into namespace `atlas`. Shikigami adds it once the app's fence, signing key and build credentials exist,
-from `deploy/meru.yaml.in` (the template's chart release and check image) with the owner from the request.
-`deploy/values.yaml` is the app's whole deployment, rendered with the `nuwa-app` chart from
-[Meru/nuwa](https://git.clockmost.com/Meru/nuwa). Merging to `main` runs the checks, builds the image, signs it and rolls
-it out; builds run in namespace `atlas-build` on the runner from [Meru/sindri](https://git.clockmost.com/Meru/sindri).
-No secrets live in this repo: they come from OpenBao, through the External Secrets Operator or the build's own login.
+## Rules
+
+- **No god files.** One job per module; a file over ~300 lines needs a reason.
+- **Secrets**: only in a sops-encrypted `secrets.env` (infra repo) → gitignored `.env` →
+  read by the backend via pydantic-settings as `SecretStr`. Never in the frontend,
+  never in a response, never in a log. `scripts/secret-scan.sh` enforces it in CI.
+- **Read-only.** No write endpoints, no actions (Arcane does those).
+- Conventional Commits, trunk-based (`main` protected, short-lived branches).
 
 ## License
 
-MIT - see `LICENSE`.
+MIT, see `LICENSE`.

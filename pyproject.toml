@@ -1,32 +1,39 @@
 [project]
-name = "atlas"
+name = "clockmost-atlas"
 version = "0.1.0"
-description = "The clockmost atlas - the map of what runs where, and Meru's front door (Janus)"
-requires-python = ">=3.15"
-dependencies = [
-    "fastapi>=0.162.0",
-    "uvicorn>=0.54.0",
-]
+description = "clockmost atlas: the live, repo-generated map and home page of the lab"
+requires-python = ">=3.13"
+license = "MIT"
+
+[tool.uv.workspace]
+members = ["packages/generator", "packages/api"]
+
+[tool.uv.sources]
+atlas-gen = { workspace = true }
+atlas-api = { workspace = true }
 
 [dependency-groups]
 dev = [
-    "httpx2>=2.16.0",
-    "pytest>=9.2.0",
-    "ruff>=0.17.3",
+    "ruff>=0.16",
+    "pytest>=9.1",
+    "httpx2",
     "ty>=0.0.95",
+    "types-pyyaml>=6.0.12.20261030",
 ]
 
-[tool.uv]
-package = false # an app, not a library: the code runs from src/
-
 [tool.ruff]
-line-length = 120
+line-length = 110
+target-version = "py313"
 
 [tool.ruff.lint]
-select = ["E", "F", "W", "I", "UP", "B", "SIM", "RUF"]
+select = ["E", "F", "W", "I", "B", "UP", "S", "SIM", "RUF"]
+ignore = ["S101"]  # asserts are fine in tests
 
 [tool.pytest.ini_options]
-pythonpath = ["src"]
+testpaths = ["packages/generator/tests", "packages/api/tests"]
+
+[tool.ruff.lint.isort]
+known-first-party = ["atlas_gen", "atlas_api"]
 
 [tool.ty.environment]
-extra-paths = ["src"]
+python-version = "3.13"

@@ -1,0 +1,27 @@
+*.clockmost.com {
+	# a comment with reverse_proxy nothing:1 must be ignored
+	@web host web.clockmost.com
+	handle @web {
+		route {
+			import authentik_forward
+			reverse_proxy web:80
+		}
+	}
+	@api host api.clockmost.com
+	handle @api {
+		@open path /api/*
+		handle @open {
+			reverse_proxy web:8080
+		}
+		handle {
+			route {
+				import authentik_forward
+				reverse_proxy web:8080
+			}
+		}
+	}
+	@ghost host ghost.clockmost.com
+	handle @ghost {
+		reverse_proxy 192.168.10.9:3000
+	}
+}

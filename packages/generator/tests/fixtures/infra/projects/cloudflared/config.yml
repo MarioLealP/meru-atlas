@@ -1,0 +1,4 @@
+ingress:
+  - hostname: web.clockmost.com
+    service: https://caddy:443
+  - service: http_status:404

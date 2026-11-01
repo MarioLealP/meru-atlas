@@ -1,0 +1,39 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://atlas.clockmost.com/schemas/status.schema.json",
+  "title": "clockmost atlas live status",
+  "description": "Written every minute by the host collector (ops/sbin/clockmost-atlas-status.py). Runtime data only; never a secret.",
+  "type": "object",
+  "required": ["generated", "containers", "problems", "errors"],
+  "properties": {
+    "generated": { "type": "integer", "description": "unix seconds" },
+    "containers": {
+      "type": "object",
+      "additionalProperties": {
+        "type": "object", "required": ["state"],
+        "properties": {
+          "state": { "type": "string" }, "health": { "type": "string" },
+          "restarts": { "type": "integer" }, "uptime": { "type": "integer" }, "image": { "type": "string" }
+        }
+      }
+    },
+    "problems": {
+      "type": "array",
+      "items": {
+        "type": "object", "required": ["name", "severity", "since"],
+        "properties": {
+          "name": { "type": "string" }, "severity": { "type": "integer", "minimum": 0, "maximum": 5 },
+          "since": { "type": "integer" }, "host": { "type": "string" }, "hostid": { "type": "string" }
+        }
+      }
+    },
+    "bans": { "type": "array", "items": { "type": "object", "required": ["ip"], "properties": { "ip": { "type": "string" }, "since": { "type": "string" }, "why": { "type": "string" } } } },
+    "trivy": { "type": "object", "additionalProperties": { "type": "object", "properties": { "c": { "type": "integer" }, "h": { "type": "integer" } } } },
+    "trivy_at": { "type": "integer" },
+    "deploy": { "type": "object" },
+    "headscale": { "type": "object" },
+    "wazuh": { "type": "array" },
+    "timers": { "type": "object" },
+    "errors": { "type": "array", "items": { "type": "string" } }
+  }
+}
