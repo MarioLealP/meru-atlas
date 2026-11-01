@@ -1,4 +1,5 @@
 // UI state (Svelte 5 runes). One place for selection, route and layer switches.
+import type { Outcome } from "./view/approval";
 export type Kind = "traffic" | "route" | "sso" | "data" | "watch" | "alert" | "ship" | "backup";
 export const KINDS: [Kind, string][] = [
   ["traffic", "Traffic"],
@@ -31,6 +32,7 @@ class UiState {
   traceFrom = $state<string | null>(null); // "route from here to…" waiting for a target
   view = $state<View>("map"); // the map, the unit catalogue, the docs, or the requests waiting for approval
   doc = $state<string | null>(null); // the docs page open in the Docs view
+  outcome = $state<Outcome | null>(null); // how the last Approve / Deny ended, shown on the Requests view
   lens = $state<"exposure" | "networks" | null>(null); // phase 6 lenses: a whole-map question
   net = $state<string | null>(null); // the network the networks lens shows
   allLines = $state(stored("atlas.alllines", false));

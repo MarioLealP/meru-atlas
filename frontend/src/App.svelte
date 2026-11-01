@@ -19,6 +19,7 @@
   import { ui, type View } from "./lib/state.svelte";
   import { exposure, type Lens } from "./lib/view/exposure";
   import { readHash, writeHash } from "./lib/view/hash";
+  import { readOutcome } from "./lib/view/approval";
   import { sharedNetworks } from "./lib/view/networks";
   import { isNarrow, overview } from "./lib/view/overview";
   import { TOP_BAR, type Inset, type panzoom } from "./lib/view/panzoom";
@@ -129,8 +130,10 @@
     const d = readHash();
     if (d.doc) openDoc(d.doc === true ? null : d.doc);
     else if (d.list) setView("list");
-    else if (d.requests) setView("requests");
-    else if (d.route && model.nodes.has(d.route[0]) && model.nodes.has(d.route[1])) {
+    else if (d.requests) {
+      ui.outcome = readOutcome(); // read before setView rewrites the hash
+      setView("requests");
+    } else if (d.route && model.nodes.has(d.route[0]) && model.nodes.has(d.route[1])) {
       ui.traceFrom = d.route[0];
       pick(d.route[1]);
     } else if (d.unit && model.nodes.has(d.unit)) {
