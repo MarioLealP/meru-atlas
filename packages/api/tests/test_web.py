@@ -30,6 +30,15 @@ def test_index_is_never_cached_and_carries_the_csp(client):
     assert "script-src 'self'" in r.headers["content-security-policy"]
 
 
+def test_forms_may_only_post_to_janus_approve_and_go_on_to_authentik(client):
+    header = client.get("/", headers=ID).headers["content-security-policy"]
+    csp = dict(d.strip().split(" ", 1) for d in header.split(";"))
+    assert csp["form-action"].split() == [
+        "https://atlas.clockmost.com/api/janus/approve/",
+        "https://auth.clockmost.com/application/o/authorize/",
+    ]
+
+
 def test_hashed_assets_are_immutable_with_the_right_type(client):
     js = client.get("/assets/index-AbC123.js", headers=ID)
     assert js.status_code == 200 and "immutable" in js.headers["cache-control"]

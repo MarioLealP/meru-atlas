@@ -20,13 +20,16 @@ function stored(key: string, fallback: boolean): boolean {
   }
 }
 
+/** The top-level views (Toolbar tabs). */
+export type View = "map" | "list" | "docs" | "requests";
+
 class UiState {
   selected = $state<string | null>(null);
   cardOpen = $state(false);
   hover = $state<string | null>(null);
   trace = $state<{ path: string[]; edges: number[] } | null>(null);
   traceFrom = $state<string | null>(null); // "route from here to…" waiting for a target
-  view = $state<"map" | "list" | "docs">("map"); // the map, the unit catalogue, or the docs
+  view = $state<View>("map"); // the map, the unit catalogue, the docs, or the requests waiting for approval
   doc = $state<string | null>(null); // the docs page open in the Docs view
   lens = $state<"exposure" | "networks" | null>(null); // phase 6 lenses: a whole-map question
   net = $state<string | null>(null); // the network the networks lens shows

@@ -2,7 +2,7 @@
   import type { Model } from "../lib/graph/model";
   import { ago, isStale } from "../lib/live/health";
   import { live } from "../lib/live/poll.svelte";
-  import { KINDS, ui } from "../lib/state.svelte";
+  import { KINDS, ui, type View } from "../lib/state.svelte";
   import { KIND_BG } from "../lib/view/kinds";
 
   let {
@@ -15,7 +15,7 @@
     model: Model;
     onpick: (id: string) => void;
     onfit: () => void;
-    onview: (v: "map" | "list" | "docs") => void;
+    onview: (v: View) => void;
     onwall: () => void;
   } = $props();
 
@@ -71,6 +71,14 @@
       onclick={() => onview("docs")}
     >
       Docs
+    </button>
+    <button
+      class="ef-tab px-2 lg:px-4"
+      role="tab"
+      aria-selected={ui.view === "requests"}
+      onclick={() => onview("requests")}
+    >
+      Requests
     </button>
   </div>
 

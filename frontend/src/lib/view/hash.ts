@@ -1,7 +1,13 @@
 // Deep links: #u=<unit> selects a unit, #r=<from>,<to> shows a traced route, #v=list opens
-// the catalogue, #d=<page> (or #v=docs) the docs. Ids are checked against a strict pattern
-// before they reach the model.
-export type Deep = { unit?: string; route?: [string, string]; list?: boolean; doc?: string | true };
+// the catalogue, #v=requests the requests waiting for approval, #d=<page> (or #v=docs) the
+// docs. Ids are checked against a strict pattern before they reach the model.
+export type Deep = {
+  unit?: string;
+  route?: [string, string];
+  list?: boolean;
+  requests?: boolean;
+  doc?: string | true;
+};
 const ID = /^[a-z0-9_-]{1,64}$/;
 
 export function readHash(h = location.hash): Deep {
@@ -13,6 +19,7 @@ export function readHash(h = location.hash): Deep {
     unit: u && ID.test(u) ? u : undefined,
     route: r?.length === 2 && r.every((x) => ID.test(x)) ? [r[0]!, r[1]!] : undefined,
     list: q.get("v") === "list" || undefined,
+    requests: q.get("v") === "requests" || undefined,
     doc: d && ID.test(d) ? d : q.get("v") === "docs" || undefined,
   };
 }
@@ -21,6 +28,7 @@ export function writeHash(d: Deep) {
   if (d.doc === true) q.set("v", "docs");
   else if (d.doc) q.set("d", d.doc);
   else if (d.list) q.set("v", "list");
+  else if (d.requests) q.set("v", "requests");
   else if (d.route) q.set("r", d.route.join(","));
   else if (d.unit) q.set("u", d.unit);
   const s = q.toString();

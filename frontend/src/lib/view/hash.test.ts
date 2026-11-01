@@ -7,10 +7,12 @@ describe("readHash", () => {
       unit: "gitea",
       route: undefined,
       list: undefined,
+      requests: undefined,
       doc: undefined,
     });
     expect(readHash("#r=phone,gitea").route).toEqual(["phone", "gitea"]);
     expect(readHash("#v=list").list).toBe(true);
+    expect(readHash("#v=requests").requests).toBe(true);
   });
   it("reads a docs page or the docs view", () => {
     expect(readHash("#d=zabbix-agent-desktop").doc).toBe("zabbix-agent-desktop");
