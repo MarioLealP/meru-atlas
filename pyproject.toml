@@ -13,7 +13,13 @@ atlas-gen = { workspace = true }
 atlas-api = { workspace = true }
 
 [dependency-groups]
-dev = ["ruff>=0.16", "pytest>=9.1", "httpx2"]
+dev = [
+    "ruff>=0.16",
+    "pytest>=9.1",
+    "httpx2",
+    "ty>=0.0.95",
+    "types-pyyaml>=6.0.12.20261030",
+]
 
 [tool.ruff]
 line-length = 110
@@ -28,3 +34,6 @@ testpaths = ["packages/generator/tests", "packages/api/tests"]
 
 [tool.ruff.lint.isort]
 known-first-party = ["atlas_gen", "atlas_api"]
+
+[tool.ty.environment]
+python-version = "3.13"

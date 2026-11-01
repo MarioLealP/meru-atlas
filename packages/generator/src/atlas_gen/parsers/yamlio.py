@@ -15,7 +15,11 @@ def _any_tag(loader: yaml.SafeLoader, _suffix: str, node: yaml.Node) -> Any:
         return loader.construct_scalar(node)
     if isinstance(node, yaml.SequenceNode):
         return loader.construct_sequence(node)
-    return loader.construct_mapping(node)  # type: ignore[arg-type]
+    if isinstance(node, yaml.MappingNode):
+        return loader.construct_mapping(node)
+    raise yaml.constructor.ConstructorError(
+        None, None, f"unexpected node {type(node).__name__}", node.start_mark
+    )
 
 
 LooseLoader.add_multi_constructor("!", _any_tag)

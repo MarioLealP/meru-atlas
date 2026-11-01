@@ -7,6 +7,7 @@ from pathlib import Path
 from typing import Any
 
 from jsonschema import Draft202012Validator
+from jsonschema.protocols import Validator
 
 SCHEMAS = ("graph", "status", "docs")
 
@@ -20,7 +21,7 @@ def _schema_dir() -> Path:
 
 
 @cache
-def validator(name: str) -> Draft202012Validator:
+def validator(name: str) -> Validator:
     if name not in SCHEMAS:
         raise ValueError(f"unknown schema {name!r}")
     schema = json.loads((_schema_dir() / f"{name}.schema.json").read_text())
