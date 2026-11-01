@@ -1,0 +1,11 @@
+name: web
+services:
+  web:
+    image: ghcr.io/acme/web:${WEB_VERSION:-1.2}
+    container_name: web
+    networks: [front-web, internal]
+  worker:
+    image: ghcr.io/acme/worker:3
+networks:
+  front-web: { name: front-web, external: true }
+  internal: {}

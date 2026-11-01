@@ -1,0 +1,88 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://atlas.clockmost.com/schemas/docs.schema.json",
+  "title": "clockmost atlas docs",
+  "description": "The docs pages (infra repo docs/**/*.md), validated, linked both ways and rendered by atlas_gen. Section HTML comes from markdown-it with raw HTML disabled. Never contains a secret.",
+  "type": "object",
+  "required": ["schema_version", "pages", "uncovered_nodes"],
+  "additionalProperties": false,
+  "properties": {
+    "schema_version": { "const": 1 },
+    "pages": { "type": "array", "items": { "$ref": "#/$defs/page" } },
+    "uncovered_nodes": {
+      "type": "array",
+      "description": "atlas map nodes no page documents yet",
+      "items": { "$ref": "#/$defs/id" }
+    }
+  },
+  "$defs": {
+    "id": { "type": "string", "pattern": "^[a-z0-9][a-z0-9-]*$" },
+    "relkind": {
+      "enum": ["runs-on", "part-of", "reports-to", "talks-to", "cert-from", "devices", "mentions", "embeds"]
+    },
+    "page": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "title", "kind", "path", "status", "verified", "relations", "backrefs", "children", "sections"],
+      "properties": {
+        "id": { "$ref": "#/$defs/id" },
+        "title": { "type": "string" },
+        "kind": { "enum": ["app", "component", "device", "topic", "access"] },
+        "path": { "type": "string" },
+        "node": { "$ref": "#/$defs/id" },
+        "status": { "enum": ["active", "temporary", "retire", "junk?"] },
+        "verified": { "type": "string", "format": "date" },
+        "installed_by": { "type": "string" },
+        "relations": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["kind", "to"],
+            "properties": { "kind": { "$ref": "#/$defs/relkind" }, "to": { "$ref": "#/$defs/id" } }
+          }
+        },
+        "backrefs": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["kind", "from"],
+            "properties": { "kind": { "$ref": "#/$defs/relkind" }, "from": { "$ref": "#/$defs/id" } }
+          }
+        },
+        "children": { "type": "array", "items": { "$ref": "#/$defs/id" } },
+        "sections": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["title", "blocks"],
+            "properties": {
+              "title": { "type": "string" },
+              "blocks": {
+                "type": "array",
+                "items": {
+                  "oneOf": [
+                    {
+                      "type": "object",
+                      "additionalProperties": false,
+                      "required": ["html"],
+                      "properties": { "html": { "type": "string" } }
+                    },
+                    {
+                      "type": "object",
+                      "additionalProperties": false,
+                      "required": ["embed"],
+                      "properties": { "embed": { "$ref": "#/$defs/id" } }
+                    }
+                  ]
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}

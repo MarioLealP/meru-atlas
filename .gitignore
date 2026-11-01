@@ -1,3 +1,19 @@
-.venv/
+# python
 __pycache__/
+*.pyc
+.venv/
+.ruff_cache/
+.pytest_cache/
+# node
+node_modules/
+frontend/dist/
+# secrets / local config (secrets.env is sops-encrypted and lives in the infra repo)
 .env
+*.decrypted
+# editors / OS
+.vscode/
+.idea/
+.DS_Store
+
+# schemas are copied into the generator package at build time (single source: /schemas)
+packages/generator/src/atlas_gen/schemas/

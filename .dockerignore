@@ -1,4 +1,7 @@
-.venv/
-.git/
+**/node_modules
+**/.venv
+**/__pycache__
+frontend/dist
+.git
+.env
 deploy/
-tests/

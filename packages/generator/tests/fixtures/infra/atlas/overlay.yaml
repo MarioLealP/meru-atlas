@@ -1,0 +1,15 @@
+zabbix_server_hostid: 10780
+router_forwards:
+- [tcp, 443, Caddy]
+zones:
+- [edge, Edge, 0, 0, 0, 0]
+- [apps, Apps, 0, 0, 0, 0]
+- [plat, Platform, 0, 0, 0, 0]
+nodes:
+- {id: caddy, label: Caddy, zone: edge, row: 0, containers: [caddy]}
+- {id: authentik, label: Authentik, zone: edge, row: 1}
+- {id: web, label: Web, zone: apps, row: 0, containers: [web, web-worker-1], does: The web app}
+- {id: gone, label: Gone, zone: apps, row: 1, containers: [not-there]}
+edges:
+- [web, caddy, data, callback]
+- [web, nowhere, data]
