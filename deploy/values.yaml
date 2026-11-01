@@ -7,5 +7,5 @@ name: atlas
 owner: mario
 image:
   repository: zot.clockmost.com/meru/atlas
-  digest: sha256:0000000000000000000000000000000000000000000000000000000000000000
-  tag: ""
+  digest: sha256:1eb2051a995fcc700e0bf5513307aecd6e6ae0aeb2d3ce4018514105cd82d016
+  tag: "717a6e9c6d6d"
