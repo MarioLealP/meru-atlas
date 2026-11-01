@@ -18,5 +18,13 @@ resources: # request size small (D34): the compose container had 192m
   limits:
     memory: 256Mi
 env:
-  ATLAS_GRAPH_FILE: /data/atlas/graph.json # the feeds aren't mounted yet (step 3) - the map is empty until then
+  ATLAS_GRAPH_FILE: /data/atlas/graph.json
+  ATLAS_DOCS_FILE: /data/atlas/docs.json.gz
   ATLAS_STATUS_FILE: /data/live/status.json
+# The feeds (decision B, 2026-11-01): the host's clockmost-atlas-status pushes these ConfigMaps - status every minute,
+# graph + docs when the infra repo's CI output changes. Read-only; the atlas never reaches the host.
+configMaps:
+  - name: atlas-map
+    mountPath: /data/atlas
+  - name: atlas-live
+    mountPath: /data/live

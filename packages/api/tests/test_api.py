@@ -1,3 +1,4 @@
+import gzip
 import json
 import shutil
 from pathlib import Path
@@ -66,3 +67,15 @@ def test_docs_served_validated_and_503_when_absent(client):
     assert r.status_code == 200 and r.json()["pages"] == []
     (tmp / "docs.json").write_text(json.dumps({"schema_version": 1, "pages": [{"id": "x"}]}))
     assert c.get("/api/docs", headers=ID).status_code == 503
+
+
+def test_gzipped_docs_are_read_as_meru_mounts_them(tmp_path):
+    """On Meru docs.json arrives gzipped in a ConfigMap (1 MiB object limit): a .gz path is decompressed."""
+    shutil.copy(FIX / "graph.min.json", tmp_path / "graph.json")
+    docs = {"schema_version": 1, "pages": [], "uncovered_nodes": []}
+    (tmp_path / "docs.json.gz").write_bytes(gzip.compress(json.dumps(docs).encode()))
+    s = Settings(graph_file=tmp_path / "graph.json", docs_file=tmp_path / "docs.json.gz")
+    r = TestClient(create_app(s)).get("/api/docs", headers=ID)
+    assert r.status_code == 200 and r.json()["pages"] == []
+    (tmp_path / "docs.json.gz").write_bytes(b"not gzip")
+    assert TestClient(create_app(s)).get("/api/docs", headers=ID).status_code == 503
