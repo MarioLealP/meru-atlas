@@ -139,3 +139,17 @@ export const Docs = z.object({
   uncovered_nodes: z.array(z.string()),
 });
 export type Docs = z.infer<typeof Docs>;
+
+// Janus (Meru's front door, D93): the requests waiting for approval - open PRs on Meru/requests.
+const Sha = z.string().regex(/^[0-9a-f]{40}$/);
+export const Pending = z.object({
+  pr: z.number().int().positive(),
+  title: z.string(),
+  url: z.url({ protocol: /^https$/ }),
+  author: z.string(),
+  requested_by: z.string().nullable(),
+  head: Sha,
+  files: z.array(z.string()),
+});
+export type Pending = z.infer<typeof Pending>;
+export const PendingList = z.array(Pending);

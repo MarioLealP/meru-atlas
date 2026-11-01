@@ -3,6 +3,7 @@
   import Card from "./components/Card.svelte";
   import Catalogue from "./components/Catalogue.svelte";
   import Docs from "./components/Docs.svelte";
+  import Requests from "./components/Requests.svelte";
   import Map from "./components/Map.svelte";
   import ExposureBar from "./components/ExposureBar.svelte";
   import Launcher from "./components/Launcher.svelte";
@@ -15,7 +16,7 @@
   import { unitLive, type UnitLive } from "./lib/live/health";
   import { live } from "./lib/live/poll.svelte";
   import { Graph } from "./lib/schemas";
-  import { ui } from "./lib/state.svelte";
+  import { ui, type View } from "./lib/state.svelte";
   import { exposure, type Lens } from "./lib/view/exposure";
   import { readHash, writeHash } from "./lib/view/hash";
   import { sharedNetworks } from "./lib/view/networks";
@@ -97,11 +98,19 @@
     pick(id);
     frame();
   }
-  function setView(v: "map" | "list" | "docs") {
+  function setView(v: View) {
     if (v !== "map") pick(null);
     ui.view = v;
     ui.doc = null;
-    writeHash(v === "list" ? { list: true } : v === "docs" ? { doc: true } : {});
+    writeHash(
+      v === "list"
+        ? { list: true }
+        : v === "docs"
+          ? { doc: true }
+          : v === "requests"
+            ? { requests: true }
+            : {},
+    );
   }
   /** Open a docs page (null = the page list) in the Docs view. */
   function openDoc(id: string | null) {
@@ -120,6 +129,7 @@
     const d = readHash();
     if (d.doc) openDoc(d.doc === true ? null : d.doc);
     else if (d.list) setView("list");
+    else if (d.requests) setView("requests");
     else if (d.route && model.nodes.has(d.route[0]) && model.nodes.has(d.route[1])) {
       ui.traceFrom = d.route[0];
       pick(d.route[1]);
@@ -208,6 +218,7 @@
     <!-- a tap on a box never moves or zooms the map (Mario, 2026-10-02); only list picks fly -->
     <Map {model} layout={scene.layout} paths={scene.paths} {liveBy} {lens} onpick={tap} bind:api />
     {#if ui.view === "list"}<Catalogue {model} {liveBy} onshow={go} />{/if}
+    {#if ui.view === "requests"}<Requests />{/if}
     {#if ui.view === "docs"}
       <Docs index={docs.index} current={ui.doc} error={docs.error} onopen={openDoc} onmap={go} />
     {/if}
