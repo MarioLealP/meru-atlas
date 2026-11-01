@@ -1,14 +1,21 @@
 <script lang="ts">
-  // Requests waiting for approval (Janus, D93) with Approve / Deny (D98). The buttons are plain form posts, not
-  // fetch(): they have to be a real page navigation - Janus answers with a redirect to Authentik's silent check and
-  // sets its short anti-forgery cookie. No token or code is ever seen by this code.
+  // Requests waiting for approval (Janus, D93) with Approve / Deny (D98). Each button first asks "are you sure"
+  // in a dialog; the dialog's confirm is a plain form post, not fetch(): it has to be a real page navigation -
+  // Janus answers with a redirect to Authentik's silent check and sets its short anti-forgery cookie, and at the
+  // end sends the browser back here with how it went (ui.outcome). No token or code is ever seen by this code.
   import { onMount } from "svelte";
   import { getValidated } from "../lib/api";
   import { PendingList, type Pending } from "../lib/schemas";
+  import { ui } from "../lib/state.svelte";
+  import { describe, type Decision } from "../lib/view/approval";
 
   let items = $state<Pending[] | null>(null);
   let error = $state<string | null>(null);
   let loading = $state(false);
+  let asking = $state<{ r: Pending; decision: Decision } | null>(null);
+  let dialog = $state<HTMLDialogElement>();
+
+  const message = $derived(ui.outcome ? describe(ui.outcome) : null);
 
   async function load() {
     loading = true;
@@ -22,6 +29,11 @@
     }
   }
   onMount(load);
+
+  function ask(r: Pending, decision: Decision) {
+    asking = { r, decision };
+    dialog?.showModal();
+  }
 
   const startUrl = (pr: number) => `/api/janus/approve/${pr}/start`;
 </script>
@@ -37,6 +49,26 @@
       it's you, for this request at this exact commit; Xolotl then puts it on Meru/requests main and Shikigami
       builds it. Read the change in Gitea first.
     </p>
+
+    {#if message}
+      <div
+        class={[
+          "ef-card mb-4 flex items-start gap-3 p-3 lg:p-4",
+          message.tone === "ok" ? "border-ok" : "border-crit",
+        ]}
+        role="status"
+      >
+        <div class="min-w-0 flex-1">
+          <div class={["ef-card__title", message.tone === "ok" ? "text-ok" : "text-crit"]}>
+            {message.title}
+          </div>
+          <p class="mt-1 text-ink-2">{message.text}</p>
+        </div>
+        <button class="ef-btn ef-btn--ghost" onclick={() => (ui.outcome = null)} aria-label="Dismiss"
+          >×</button
+        >
+      </div>
+    {/if}
 
     <div class="mb-4">
       <button class="ef-btn" onclick={load} disabled={loading}>
@@ -66,16 +98,8 @@
             <div class="flex flex-wrap gap-2">
               <a class="ef-btn ef-btn--ghost" href={r.url} target="_blank" rel="noopener noreferrer">Review</a
               >
-              <form method="post" action={startUrl(r.pr)}>
-                <input type="hidden" name="head" value={r.head} />
-                <input type="hidden" name="decision" value="deny" />
-                <button class="ef-btn ef-btn--danger" type="submit">Deny</button>
-              </form>
-              <form method="post" action={startUrl(r.pr)}>
-                <input type="hidden" name="head" value={r.head} />
-                <input type="hidden" name="decision" value="approve" />
-                <button class="ef-btn ef-btn--primary" type="submit">Approve</button>
-              </form>
+              <button class="ef-btn ef-btn--danger" onclick={() => ask(r, "deny")}>Deny</button>
+              <button class="ef-btn ef-btn--primary" onclick={() => ask(r, "approve")}>Approve</button>
             </div>
           </li>
         {:else}
@@ -85,3 +109,38 @@
     {/if}
   </section>
 </div>
+
+<!-- the "are you sure": a native modal dialog (focus stays inside, Esc cancels) -->
+<dialog
+  bind:this={dialog}
+  class="ef-modal m-auto w-[min(28rem,calc(100%-2rem))] p-0 text-ink backdrop:bg-ground/70 backdrop:backdrop-blur-sm"
+  onclose={() => (asking = null)}
+>
+  {#if asking}
+    {@const deny = asking.decision === "deny"}
+    <div class="ef-modal__head">
+      <h4>{deny ? "Deny" : "Approve"} #{asking.r.pr}?</h4>
+    </div>
+    <div class="ef-modal__body flex flex-col gap-3">
+      <p class="break-words text-ink">{asking.r.title}</p>
+      <ul class="font-mono text-sm">
+        {#each asking.r.files as f (f)}<li>{f}</li>{/each}
+      </ul>
+      <p>
+        {#if deny}
+          The PR is closed and nothing is built. It can be asked for again.
+        {:else}
+          Xolotl puts it on Meru/requests main at {asking.r.head.slice(0, 12)} and Shikigami builds it.
+        {/if}
+      </p>
+      <form class="flex justify-end gap-2" method="post" action={startUrl(asking.r.pr)}>
+        <input type="hidden" name="head" value={asking.r.head} />
+        <input type="hidden" name="decision" value={asking.decision} />
+        <button class="ef-btn ef-btn--ghost" type="button" onclick={() => dialog?.close()}>Cancel</button>
+        <button class={["ef-btn", deny ? "ef-btn--danger" : "ef-btn--primary"]} type="submit">
+          {deny ? "Deny" : "Approve"}
+        </button>
+      </form>
+    </div>
+  {/if}
+</dialog>
