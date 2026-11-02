@@ -162,3 +162,8 @@ export const OnMain = z.object({
 });
 export type OnMain = z.infer<typeof OnMain>;
 export const OnMainList = z.array(OnMain);
+
+// GET /api/thoth/apps: each Meru app as Thoth knows it (J5). status stays a string - Thoth may grow new ones.
+export const ThothApp = z.object({ key: z.string(), status: z.string() });
+export type ThothApp = z.infer<typeof ThothApp>;
+export const ThothAppList = z.array(ThothApp);

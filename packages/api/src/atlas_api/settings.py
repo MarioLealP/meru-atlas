@@ -26,3 +26,8 @@ class Settings(BaseSettings):
     events_poll_s: float = 2.0
     events_keepalive_s: float = 25.0
     events_max_s: float = 900.0
+    # Thoth (D92, D104): read with the pod's own Kubernetes token - no secret. Unset token file = no Thoth.
+    thoth_url: str = "http://thoth.thoth.svc"
+    thoth_token_url: str = "https://auth.clockmost.com/application/o/token/"  # noqa: S105 - a URL, not a secret
+    thoth_client_id: str = "thoth"
+    thoth_token_file: Path | None = None
