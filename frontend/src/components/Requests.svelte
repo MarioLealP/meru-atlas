@@ -6,12 +6,22 @@
   // Remove (J3) is the same: Janus opens the removal PR in Mario's name and approves it in the same click.
   import { onMount } from "svelte";
   import { getValidated } from "../lib/api";
-  import { OnMainList, PendingList, type OnMain, type Pending } from "../lib/schemas";
+  import {
+    OnMainList,
+    PendingList,
+    ThothAppList,
+    type OnMain,
+    type Pending,
+    type ThothApp,
+  } from "../lib/schemas";
   import { ui } from "../lib/state.svelte";
   import { describe, type Decision } from "../lib/view/approval";
+  import { statusByApp, toneOf } from "../lib/view/thoth";
 
   let items = $state<Pending[] | null>(null);
   let onMain = $state<OnMain[] | null>(null);
+  let thoth = $state<ThothApp[] | null>(null);
+  const status = $derived(statusByApp(thoth));
   let error = $state<string | null>(null);
   let loading = $state(false);
   type Asking = { r: Pending; decision: Decision } | { app: OnMain };
@@ -25,8 +35,11 @@
     try {
       // the On main list is its own fetch: when it fails (an older Janus) only that list is missing
       const apps = getValidated("/api/janus/apps", OnMainList).catch(() => null);
+      // Thoth's view (J5) is extra: when it's down the list still shows, just without statuses
+      const known = getValidated("/api/thoth/apps", ThothAppList).catch(() => null);
       items = await getValidated("/api/janus/requests", PendingList);
       onMain = await apps;
+      thoth = await known;
       error = null;
     } catch (e) {
       error = e instanceof Error ? e.message : String(e);
@@ -121,7 +134,8 @@
         </h3>
         <p class="mb-4 max-w-[80ch] text-ink-2">
           What Meru runs. Remove retires one: the removal goes on main with your approval in one click, then
-          Xolotl and Shikigami stop it, park its data and take its trust away.
+          Xolotl and Shikigami stop it, park its data and take its trust away. The tag is Thoth's view: active
+          once Heimdall sees it running, retained once its retirement is done.
         </p>
         <ul class="grid gap-2 lg:grid-cols-2">
           {#each onMain as a (a.path)}
@@ -130,6 +144,18 @@
                 <div class="ef-card__title break-words">{a.name}</div>
                 <div class="ef-card__meta mt-1 font-mono">{a.path}</div>
               </div>
+              {#if status.get(a.name)}
+                {@const s = status.get(a.name) ?? ""}
+                <span
+                  class={[
+                    "ef-tag",
+                    toneOf(s) === "ok" && "text-ok",
+                    toneOf(s) === "warn" && "text-warn",
+                    toneOf(s) === "crit" && "text-crit",
+                  ]}
+                  title="What Thoth knows about it">{s}</span
+                >
+              {/if}
               {#if a.removed}
                 <span class="ef-tag">removed</span>
               {:else}
