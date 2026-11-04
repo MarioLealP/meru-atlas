@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Every Python check CI runs, runnable locally: lint, format, types, file size, the lockfile, pip-audit, tests.
+# Every Python check CI runs, runnable locally: lint, format, types, file size, TLS checks, the lockfile, pip-audit, tests.
 # The frontend's checks (prettier, svelte-check, vitest, the bundle's secret scan) run in the Dockerfile's web stage,
 # so the build can't produce an image that skipped them - and the check runner needs no Node.
 set -euo pipefail
@@ -17,6 +17,11 @@ step "no source file over 500 lines"
 too_long=$(find packages/*/src -name '*.py' -exec awk 'FNR == 501 { print FILENAME }' {} +)
 if [[ -n $too_long ]]; then
   printf '%s\n' "$too_long"
+  exit 1
+fi
+step "TLS checks stay on"
+# ruff's rule for this only knows requests and httpx by name, not httpx2.
+if grep -rn 'verify=False' packages/*/src; then
   exit 1
 fi
 step "uv.lock up to date"
