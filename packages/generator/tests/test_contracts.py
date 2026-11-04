@@ -13,7 +13,7 @@ def load(name: str):
     return json.loads((FIX / name).read_text())
 
 
-@pytest.mark.parametrize("schema,file", [("graph", "graph.min.json"), ("status", "status.min.json")])
+@pytest.mark.parametrize(("schema", "file"), [("graph", "graph.min.json"), ("status", "status.min.json")])
 def test_fixture_is_valid(schema, file):
     assert contracts.errors(schema, load(file)) == []
 
@@ -38,5 +38,5 @@ def test_graph_rejects_unknown_top_level_keys():
 
 
 def test_unknown_schema_name():
-    with pytest.raises(ValueError):
+    with pytest.raises(ValueError, match="unknown schema"):
         contracts.validator("nope")

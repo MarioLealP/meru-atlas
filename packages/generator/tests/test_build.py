@@ -21,7 +21,8 @@ def test_graph_is_schema_valid():
 
 def test_never_contains_secret_references():
     text = json.dumps(graph())
-    assert "SUPER_SECRET" not in text and "client_secret" not in text
+    assert "SUPER_SECRET" not in text
+    assert "client_secret" not in text
 
 
 def test_node_facts_from_repo():
@@ -38,7 +39,8 @@ def test_node_facts_from_repo():
 
 def test_unclaimed_container_and_route_go_to_unsorted():
     n = by_id(graph())
-    assert n["u-db"]["zone"] == "unsorted" and n["u-db"]["containers"] == ["lonely-db"]
+    assert n["u-db"]["zone"] == "unsorted"
+    assert n["u-db"]["containers"] == ["lonely-db"]
     assert "u-192-168-10-9" in n  # IP route target, schema-safe id
     assert any(z["id"] == "unsorted" for z in graph()["zones"])
 
@@ -52,14 +54,18 @@ def test_generated_and_overlay_edges():
 
 def test_warnings_for_missing_container_and_bad_edge():
     w = " ".join(graph()["warnings"])
-    assert "not-there" in w and "nowhere" in w and "Unsorted" in w
+    assert "not-there" in w
+    assert "nowhere" in w
+    assert "Unsorted" in w
 
 
 def test_zones_order_and_strip():
     z = {x["id"]: x for x in graph()["zones"]}
-    assert z["edge"]["order"] == 0 and z["plat"]["strip"] is True
+    assert z["edge"]["order"] == 0
+    assert z["plat"]["strip"] is True
 
 
 def test_deterministic_without_commit():
     a, b = json.dumps(build(REPO)), json.dumps(build(REPO))
-    assert a == b and "source" not in build(REPO)
+    assert a == b
+    assert "source" not in build(REPO)

@@ -17,14 +17,13 @@ def _any_tag(loader: yaml.SafeLoader, _suffix: str, node: yaml.Node) -> Any:
         return loader.construct_sequence(node)
     if isinstance(node, yaml.MappingNode):
         return loader.construct_mapping(node)
-    raise yaml.constructor.ConstructorError(
-        None, None, f"unexpected node {type(node).__name__}", node.start_mark
-    )
+    raise yaml.constructor.ConstructorError(None, None, f"unexpected node {type(node).__name__}", node.start_mark)
 
 
 LooseLoader.add_multi_constructor("!", _any_tag)
 
 
 def load_all(path: Path, loose: bool = False) -> list[Any]:
+    """Every YAML document in a file; `loose` also accepts Authentik's custom tags."""
     with path.open(encoding="utf-8-sig") as f:
         return list(yaml.load_all(f, Loader=LooseLoader if loose else yaml.SafeLoader))

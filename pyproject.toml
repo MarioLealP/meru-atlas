@@ -2,7 +2,7 @@
 name = "clockmost-atlas"
 version = "0.1.0"
 description = "clockmost atlas: the live, repo-generated map and home page of the lab"
-requires-python = ">=3.13"
+requires-python = ">=3.15"
 license = "MIT"
 
 [tool.uv.workspace]
@@ -19,21 +19,33 @@ dev = [
     "httpx2",
     "ty>=0.0.95",
     "types-pyyaml>=6.0.12.20261030",
+    "pytest-asyncio>=1.4.1",
 ]
 
 [tool.ruff]
-line-length = 110
-target-version = "py313"
+line-length = 120
+target-version = "py315"
 
 [tool.ruff.lint]
-select = ["E", "F", "W", "I", "B", "UP", "S", "SIM", "RUF"]
-ignore = ["S101"]  # asserts are fine in tests
+preview = true
+select = ["E", "F", "W", "I", "UP", "B", "SIM", "RUF", "Q", "C4", "FAST", "N", "PT", "ERA", "D", "complex-structure"]
+ignore = ["undocumented-public-init"]
+
+[tool.ruff.lint.pydocstyle]
+convention = "google"
+
+# The template's "tests/**": a workspace keeps its tests under each package.
+[tool.ruff.lint.per-file-ignores]
+"packages/*/tests/**" = ["D", "unused-async"]
 
 [tool.pytest.ini_options]
+asyncio_mode = "auto"
+asyncio_default_fixture_loop_scope = "function"
 testpaths = ["packages/generator/tests", "packages/api/tests"]
 
+# Not in the template: ruff doesn't look inside packages/*/src, so it needs telling what is ours.
 [tool.ruff.lint.isort]
 known-first-party = ["atlas_gen", "atlas_api"]
 
 [tool.ty.environment]
-python-version = "3.13"
+python-version = "3.15"

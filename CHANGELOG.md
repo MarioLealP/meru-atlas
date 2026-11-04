@@ -5,6 +5,11 @@ versions: [SemVer](https://semver.org).
 
 ## [Unreleased]
 
+### Changed
+- Meru standards: Python 3.15, line length 120, the template's ruff rules, a 500-line limit and a 2-minute
+  pytest cap in `scripts/check.sh`. The generator's `build` and `join` split into small functions (same output),
+  the API's `DataFile` and `Thoth` are frozen pydantic models, and its tests use an async client.
+
 ### Added
 - Docs pages (infra repo `docs/**/*.md`): `atlas-gen docs` validates them (pydantic frontmatter,
   fixed `## ` sections, every relation and `[[link]]` must name a page) and writes `docs.json`

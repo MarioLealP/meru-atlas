@@ -1,5 +1,7 @@
-"""Assemble docs.json (schema v1): every page validated, linked both ways, rendered. Pure and
-deterministic (no dates computed here: staleness is judged by the reader against `verified`)."""
+"""Assemble docs.json (schema v1): every page validated, linked both ways, rendered.
+
+Pure and deterministic (no dates computed here: staleness is judged by the reader against `verified`).
+"""
 
 from pathlib import Path
 from typing import Any
@@ -12,6 +14,7 @@ SKIP = {"README.md"}
 
 
 def load(repo: Path) -> list[Page]:
+    """Parse every page under docs/, sorted by path; none when the directory is missing."""
     root = repo / DOCS_DIR
     if not root.is_dir():
         return []
@@ -37,12 +40,14 @@ def check(pages: list[Page], graph: dict[str, Any] | None = None) -> list[str]:
 
 
 def node_of(p: Page, node_ids: set[str]) -> str | None:
+    """The map node a page documents: its `node` field, else the node with the page's id."""
     if p.fm and p.fm.node:
         return p.fm.node
     return p.id if p.id in node_ids else None
 
 
 def build_docs(pages: list[Page], graph: dict[str, Any] | None = None) -> dict[str, Any]:
+    """The docs.json document for the pages with valid frontmatter."""
     good = [p for p in pages if p.fm]
     titles = {p.id: p.fm.title for p in good if p.fm}
     node_ids = {n["id"] for n in graph["nodes"]} if graph else set()
@@ -66,9 +71,7 @@ def build_docs(pages: list[Page], graph: dict[str, Any] | None = None) -> dict[s
         page["relations"] = [{"kind": k, "to": t} for k, t in rels[p.id]]
         page["backrefs"] = sorted(back.get(p.id, []), key=lambda b: (b["kind"], b["from"]))
         # folded into this page's view: what is part of it, and what runs on it (D4)
-        page["children"] = sorted(
-            q.id for q in good if q.fm and q.id != p.id and p.id in (q.fm.part_of, q.fm.runs_on)
-        )
+        page["children"] = sorted(q.id for q in good if q.fm and q.id != p.id and p.id in (q.fm.part_of, q.fm.runs_on))
         page["sections"] = [{"title": t, "blocks": blocks(b, titles)} for t, b in p.sections]
         out.append(page)
 

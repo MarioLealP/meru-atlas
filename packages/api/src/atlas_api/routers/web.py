@@ -19,15 +19,18 @@ IMMUTABLE = {"Cache-Control": "public, max-age=31536000, immutable"}  # names ca
 
 
 def make_router(web_dir: Path) -> APIRouter:
+    """Build the routes that serve the frontend built into `web_dir`."""
     router = APIRouter()
     assets = (web_dir / "assets").resolve()
 
-    @router.get("/", include_in_schema=False)
-    def index() -> FileResponse:
+    @router.get("/", status_code=200, include_in_schema=False)
+    async def index() -> FileResponse:
         # never cached: it names the current hashed bundle
         return FileResponse(web_dir / "index.html", headers={"Cache-Control": "no-cache"})
 
-    @router.get("/assets/{name}", include_in_schema=False)
+    @router.get(
+        "/assets/{name}", status_code=200, responses={404: {"description": "No such asset"}}, include_in_schema=False
+    )
     def asset(name: str) -> FileResponse:
         path = assets / name
         if not ASSET.fullmatch(name) or path.resolve().parent != assets or not path.is_file():

@@ -8,6 +8,8 @@ from pydantic import BaseModel, ConfigDict
 
 
 class Route(BaseModel):
+    """One Caddy host and where it goes."""
+
     model_config = ConfigDict(frozen=True)
 
     host: str
@@ -17,6 +19,7 @@ class Route(BaseModel):
 
     @property
     def target_host(self) -> str:
+        """The target without its port."""
         return self.target if self.target == "static files" else self.target.split(":")[0]
 
 
@@ -31,6 +34,7 @@ def _blocks(text: str) -> Iterator[tuple[str, str]]:
 
 
 def parse(repo: Path) -> list[Route]:
+    """Every host of every `handle @name` block with a `host` matcher, comments skipped."""
     raw = (repo / "projects/caddy/Caddyfile").read_text(encoding="utf-8-sig")
     text = "\n".join(line for line in raw.splitlines() if not line.lstrip().startswith("#"))
     hosts = {m.group(1): m.group(2).split() for m in re.finditer(r"^\s*@([\w-]+)\s+host\s+(.+)$", text, re.M)}

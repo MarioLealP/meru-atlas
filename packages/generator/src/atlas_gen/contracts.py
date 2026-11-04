@@ -22,6 +22,7 @@ def _schema_dir() -> Path:
 
 @cache
 def validator(name: str) -> Validator:
+    """The checked validator for a schema in SCHEMAS, built once."""
     if name not in SCHEMAS:
         raise ValueError(f"unknown schema {name!r}")
     schema = json.loads((_schema_dir() / f"{name}.schema.json").read_text())

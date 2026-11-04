@@ -8,6 +8,8 @@ from atlas_gen.parsers.yamlio import load_all
 
 
 class Container(BaseModel):
+    """One compose service as a named container."""
+
     model_config = ConfigDict(frozen=True)
 
     name: str
@@ -27,6 +29,7 @@ def _network_name(key: str, defs: dict, project: str) -> str:
 
 
 def parse(repo: Path) -> dict[str, Container]:
+    """Containers from every project's compose.yaml, by container name."""
     out: dict[str, Container] = {}
     for path in sorted(repo.glob("projects/*/compose.yaml")):
         proj_dir = path.parent.name

@@ -37,6 +37,7 @@ jobs:
 
       - name: checks
         run: |
+          # --all-packages: the template's single project is a workspace of two packages here.
           uv sync --frozen --all-packages
           scripts/check.sh
 

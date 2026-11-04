@@ -3,7 +3,7 @@
 from pathlib import Path
 from typing import Any
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, ConfigDict, Field
 
 from atlas_gen.parsers.yamlio import load_all
 
@@ -11,6 +11,10 @@ STRIP_ZONES = {"plat"}  # full-width strip below the columns
 
 
 class Overlay(BaseModel):
+    """overlay.yaml with its short list forms expanded."""
+
+    model_config = ConfigDict(frozen=True)
+
     zones: list[dict[str, Any]]
     nodes: list[dict[str, Any]]
     edges: list[list[str]]
@@ -19,6 +23,7 @@ class Overlay(BaseModel):
 
 
 def load(path: Path) -> Overlay:
+    """Read the overlay file; missing sections come back empty."""
     d = load_all(path)[0] or {}
     zones = [
         {"id": z[0], "title": z[1], "order": i, **({"strip": True} if z[0] in STRIP_ZONES else {})}

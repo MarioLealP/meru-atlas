@@ -105,8 +105,10 @@ def test_relations_reverse_and_children(tmp_path):
 def test_page_maps_to_node_and_coverage(tmp_path):
     docs = build_docs(load(repo_with(tmp_path, GOOD)), graph())
     by = pages_by_id(docs)
-    assert by["web"]["node"] == "web" and "node" not in by["desktop"]
-    assert "authentik" in docs["uncovered_nodes"] and "web" not in docs["uncovered_nodes"]
+    assert by["web"]["node"] == "web"
+    assert "node" not in by["desktop"]
+    assert "authentik" in docs["uncovered_nodes"]
+    assert "web" not in docs["uncovered_nodes"]
 
 
 def test_rendering_links_embeds_and_no_raw_html(tmp_path):
@@ -114,11 +116,10 @@ def test_rendering_links_embeds_and_no_raw_html(tmp_path):
     html = by["web"]["sections"][0]["blocks"][0]["html"]
     assert '<a href="#doc/caddy">Caddy</a>' in html
     assert '<a href="#doc/desktop">the desktop\'s</a>' in html
-    assert [b for b in by["desktop"]["sections"][0]["blocks"] if "embed" in b] == [
-        {"embed": "web-agent-desktop"}
-    ]
+    assert [b for b in by["desktop"]["sections"][0]["blocks"] if "embed" in b] == [{"embed": "web-agent-desktop"}]
     bad = by["web-agent-desktop"]["sections"][0]["blocks"][0]["html"]
-    assert "<script>" not in bad and "&lt;script&gt;" in bad
+    assert "<script>" not in bad
+    assert "&lt;script&gt;" in bad
     assert 'href="javascript:' not in bad
     assert [s["title"] for s in by["caddy"]["sections"]] == ["What it is"]  # fenced ## ignored
 
@@ -138,9 +139,7 @@ stray text
 See [[Zabbix]] and [[missing-page]].
 """
     files["other/web.md"] = GOOD["server/web.md"]
-    files["server/no-origin.md"] = GOOD["server/caddy.md"].replace(
-        'installed-by: "repo: projects/caddy"\n', ""
-    )
+    files["server/no-origin.md"] = GOOD["server/caddy.md"].replace('installed-by: "repo: projects/caddy"\n', "")
     errs = "\n".join(check(load(repo_with(tmp_path, files)), graph()))
     for expected in (
         "installed-by is required",
@@ -158,9 +157,7 @@ See [[Zabbix]] and [[missing-page]].
 
 def test_unknown_node_reference(tmp_path):
     files = {"x.md": GOOD["server/caddy.md"].replace("kind: app", "kind: app\nnode: nope")}
-    assert any(
-        "node `nope` is not on the atlas map" in e for e in check(load(repo_with(tmp_path, files)), graph())
-    )
+    assert any("node `nope` is not on the atlas map" in e for e in check(load(repo_with(tmp_path, files)), graph()))
 
 
 def test_cli_docs_fails_on_problems_and_writes_on_success(tmp_path, capsys):
@@ -183,7 +180,8 @@ def test_sqlite_index_joins_pages_with_map_facts(tmp_path):
     no_page = db.execute(
         "SELECT n.id FROM nodes n LEFT JOIN pages p ON p.node = n.id WHERE p.id IS NULL ORDER BY n.id"
     ).fetchall()
-    assert ("authentik",) in no_page and ("web",) not in no_page
+    assert ("authentik",) in no_page
+    assert ("web",) not in no_page
     hit = db.execute("SELECT page FROM sections_fts WHERE sections_fts MATCH 'proxy'").fetchall()
     assert hit == [("caddy",)]
     assert db.execute("SELECT host FROM routes WHERE node = 'web' ORDER BY host").fetchall()

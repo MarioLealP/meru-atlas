@@ -1,5 +1,8 @@
-"""Markdown -> HTML for the atlas. Raw HTML in a page is escaped (html=False) and markdown-it
-refuses javascript:/vbscript:/file: links, so the page can't inject markup or script."""
+"""Markdown -> HTML for the atlas.
+
+Raw HTML in a page is escaped (html=False) and markdown-it refuses javascript:/vbscript:/file: links, so the page
+can't inject markup or script.
+"""
 
 import re
 from typing import Any

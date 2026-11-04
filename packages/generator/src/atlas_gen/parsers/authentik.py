@@ -13,6 +13,8 @@ from atlas_gen.parsers.yamlio import load_all
 
 
 class SsoApp(BaseModel):
+    """An Authentik application and how it logs in."""
+
     model_config = ConfigDict(frozen=True)
 
     host: str
@@ -31,6 +33,7 @@ def _kind(models: set[str]) -> str:
 
 
 def parse(repo: Path) -> dict[str, SsoApp]:
+    """SSO apps by launch host, leaving out those marked absent."""
     out: dict[str, SsoApp] = {}
     for path in sorted(repo.glob("projects/authentik/blueprints/*.yaml")):
         for doc in load_all(path, loose=True):
