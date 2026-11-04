@@ -11,9 +11,7 @@ def version(cts: list[Container]) -> str:
     """Pinned image versions, e.g. 'gitea 1.27.3 · postgres 17'; digests dropped, built images skipped."""
     seen: list[str] = []
     for c in cts:
-        img = re.sub(
-            r"\$\{\w+:-([^}]*)\}", r"\1 (env)", c.image.split("@")[0]
-        )  # ${VAR:-x}: real value in .env
+        img = re.sub(r"\$\{\w+:-([^}]*)\}", r"\1 (env)", c.image.split("@")[0])  # ${VAR:-x}: real value in .env
         last = img.split("/")[-1]
         if ":" not in last:
             continue
@@ -24,6 +22,7 @@ def version(cts: list[Container]) -> str:
 
 
 def login(route: Route, sso: dict[str, SsoApp]) -> str:
+    """How a route is logged into, as shown on the map."""
     if route.target.startswith("authentik-server"):
         return "is the SSO"
     if route.gate == "sso-partial":

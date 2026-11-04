@@ -5,7 +5,7 @@ from pathlib import Path
 from typing import Any
 
 import yaml
-from pydantic import BaseModel, Field, ValidationError
+from pydantic import BaseModel, ConfigDict, Field, ValidationError
 
 from atlas_gen.docs.model import ID, REQUIRED_SECTIONS, SECTIONS, Frontmatter
 
@@ -15,6 +15,10 @@ EMBED_LINE = re.compile(r"^!\[\[([a-z0-9][a-z0-9-]*)\]\]\s*$")
 
 
 class Page(BaseModel):
+    """One parsed page file; `fm` is None when its frontmatter is invalid, and `errors` says why."""
+
+    model_config = ConfigDict(frozen=True)
+
     id: str
     path: str  # relative to the repo root
     fm: Frontmatter | None
@@ -24,8 +28,10 @@ class Page(BaseModel):
 
 
 def _sections(body: str, where: str, errors: list[str]) -> list[tuple[str, str]]:
-    """`## ` headings outside code fences start sections; text before the first is refused
-    (an H1 is allowed and dropped: the title comes from frontmatter)."""
+    """Split a body on `## ` headings outside code fences.
+
+    Text before the first heading is refused (an H1 is allowed and dropped: the title comes from frontmatter).
+    """
     out: list[tuple[str, list[str]]] = []
     fence = False
     for n, line in enumerate(body.splitlines(), 1):
@@ -53,13 +59,12 @@ def _links(sections: list[tuple[str, str]], where: str, errors: list[str]) -> li
 
 
 def parse(path: Path, repo: Path) -> Page:
+    """Read one page file; what's wrong with it goes in `errors`, it never raises for bad content."""
     rel = path.relative_to(repo).as_posix()
     errors: list[str] = []
     m = FRONTMATTER.match(path.read_text(encoding="utf-8-sig").replace("\r\n", "\n"))
     if not m:
-        return Page(
-            id=path.stem, path=rel, fm=None, sections=[], errors=[f"{rel}: no `---` frontmatter block"]
-        )
+        return Page(id=path.stem, path=rel, fm=None, sections=[], errors=[f"{rel}: no `---` frontmatter block"])
     fm: Frontmatter | None = None
     try:
         raw: Any = yaml.safe_load(m.group(1)) or {}
@@ -72,17 +77,9 @@ def parse(path: Path, repo: Path) -> Page:
             errors.append(f"{rel}: {loc}: {err['msg']}")
     sections = _sections(m.group(2), rel, errors)
     titles = [t for t, _ in sections]
-    errors += [
-        f"{rel}: unknown section `## {t}` (allowed: {', '.join(SECTIONS)})"
-        for t in titles
-        if t not in SECTIONS
-    ]
-    errors += [
-        f"{rel}: duplicate section `## {t}`" for t in sorted({t for t in titles if titles.count(t) > 1})
-    ]
+    errors += [f"{rel}: unknown section `## {t}` (allowed: {', '.join(SECTIONS)})" for t in titles if t not in SECTIONS]
+    errors += [f"{rel}: duplicate section `## {t}`" for t in sorted({t for t in titles if titles.count(t) > 1})]
     errors += [f"{rel}: missing section `## {t}`" for t in REQUIRED_SECTIONS if t not in titles]
     if not re.fullmatch(ID, path.stem):
         errors.append(f"{rel}: file name must be a page id (lowercase, digits, -)")
-    return Page(
-        id=path.stem, path=rel, fm=fm, sections=sections, links=_links(sections, rel, errors), errors=errors
-    )
+    return Page(id=path.stem, path=rel, fm=fm, sections=sections, links=_links(sections, rel, errors), errors=errors)

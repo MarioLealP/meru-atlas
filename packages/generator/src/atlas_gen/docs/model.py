@@ -36,6 +36,8 @@ Status = Literal["active", "temporary", "retire", "junk?"]
 
 
 class Frontmatter(BaseModel):
+    """A page's YAML header; hyphenated keys come in through aliases."""
+
     model_config = ConfigDict(extra="forbid", frozen=True)
 
     title: str = Field(min_length=1)
@@ -47,9 +49,7 @@ class Frontmatter(BaseModel):
     talks_to: list[PageId] = Field(default_factory=list, alias="talks-to")
     cert_from: list[PageId] = Field(default_factory=list, alias="cert-from")
     devices: list[PageId] = Field(default_factory=list)
-    installed_by: str | None = Field(
-        default=None, alias="installed-by", pattern=r"^(manual|repo: \S+|package: \S+)$"
-    )
+    installed_by: str | None = Field(default=None, alias="installed-by", pattern=r"^(manual|repo: \S+|package: \S+)$")
     status: Status
     verified: date
 
@@ -59,7 +59,7 @@ class Frontmatter(BaseModel):
         return [v] if isinstance(v, str) else v
 
     @model_validator(mode="after")
-    def _installed_by_for_things(self) -> "Frontmatter":
+    def _installed_by_for_things(self) -> Frontmatter:
         if self.kind in ("app", "component", "access") and not self.installed_by:
             raise ValueError(f"installed-by is required for kind {self.kind}")
         return self

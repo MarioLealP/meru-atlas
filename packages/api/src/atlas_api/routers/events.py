@@ -12,6 +12,8 @@ from collections.abc import AsyncIterator
 from fastapi import APIRouter, Request
 from fastapi.responses import StreamingResponse
 
+from atlas_api.security import NO_IDENTITY
+
 router = APIRouter(prefix="/api")
 
 
@@ -34,7 +36,8 @@ async def _stream(request: Request) -> AsyncIterator[str]:
             yield ": keep-alive\n\n"  # comment line: keeps proxies from timing the stream out
 
 
-@router.get("/events")
-def events(request: Request) -> StreamingResponse:
+@router.get("/events", status_code=200, responses=NO_IDENTITY)
+async def events(request: Request) -> StreamingResponse:
+    """Stream which data file changed; the page refetches it."""
     headers = {"Cache-Control": "no-store", "X-Accel-Buffering": "no"}
     return StreamingResponse(_stream(request), media_type="text/event-stream", headers=headers)

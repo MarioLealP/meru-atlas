@@ -32,7 +32,7 @@ no tokens, and initiates no connections. Data arrives as files.
 
 ## Development
 
-Prerequisites: [uv](https://docs.astral.sh/uv/) ≥ 0.12, Python 3.13, Node ≥ 20.19.
+Prerequisites: [uv](https://docs.astral.sh/uv/) ≥ 0.12, Python 3.15, Node ≥ 20.19.
 
 ```bash
 git clone git@git.clockmost.com:MarioGLealP/clockmost-atlas.git && cd clockmost-atlas

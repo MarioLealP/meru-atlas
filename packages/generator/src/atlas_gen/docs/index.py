@@ -1,7 +1,8 @@
 """docs.sqlite: the pages joined with the map's repo facts, for the agent to query with SQL.
 
 Tables: pages, sections (+ sections_fts full text), relations (both frontmatter and [[links]]),
-nodes, containers, routes. Rebuilt from scratch each time; never committed."""
+nodes, containers, routes. Rebuilt from scratch each time; never committed.
+"""
 
 import json
 import sqlite3
@@ -25,6 +26,7 @@ CREATE TABLE routes (host TEXT, node TEXT, login TEXT, sso INTEGER, public INTEG
 
 
 def write_index(pages: list[Page], graph: dict[str, Any] | None, out: Path) -> None:
+    """Write the SQLite index to `out`, replacing any earlier file."""
     out.unlink(missing_ok=True)
     db = sqlite3.connect(out)
     db.executescript(SCHEMA)

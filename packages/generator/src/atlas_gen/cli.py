@@ -18,6 +18,7 @@ from atlas_gen.docs.index import write_index
 
 
 def main(argv: list[str] | None = None) -> int:
+    """Run one subcommand; the return value is the process exit code."""
     ap = argparse.ArgumentParser(prog="atlas-gen")
     sub = ap.add_subparsers(dest="cmd", required=True)
     v = sub.add_parser("validate", help="validate a data file against its schema")
@@ -26,9 +27,7 @@ def main(argv: list[str] | None = None) -> int:
     b = sub.add_parser("build", help="generate graph.json from an infra repo checkout")
     b.add_argument("repo", type=Path)
     b.add_argument("-o", "--out", type=Path, help="output file (default: stdout)")
-    b.add_argument(
-        "--with-commit", action="store_true", help="record the infra HEAD (output then changes per commit)"
-    )
+    b.add_argument("--with-commit", action="store_true", help="record the infra HEAD (output then changes per commit)")
     d = sub.add_parser("docs", help="check the docs pages and write docs.json (fails on any problem)")
     di = sub.add_parser("docs-index", help="write the pages + map facts as SQLite (even with problems)")
     for p in (d, di):
