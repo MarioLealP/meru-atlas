@@ -7,8 +7,8 @@ name: atlas
 owner: mario
 image:
   repository: zot.clockmost.com/meru/atlas
-  digest: sha256:c11e04cde96e2d39f7fa0aaec0723be2806dca00396c739aa4b7a2e0f222fb61
-  tag: "fa96ab6bd242"
+  digest: sha256:751e537e358b2ff439db62c8353cc962209b4ab36dfd614ec246b6c240bb8a08
+  tag: "429b0cc60dab"
 heartbeat:
   path: /healthz # the atlas's own health route, the one path its SSO guard leaves open
 resources: # request size small (D34): the compose container had 192m
