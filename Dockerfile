@@ -29,4 +29,4 @@ COPY --from=web /src/frontend/dist /app/web
 ENV PATH=/app/.venv/bin:$PATH PYTHONDONTWRITEBYTECODE=1 PYTHONUNBUFFERED=1 ATLAS_WEB_DIR=/app/web
 USER 10001
 EXPOSE 8080
-CMD ["uvicorn", "atlas_api.main:create_app", "--factory", "--host", "0.0.0.0", "--port", "8080", "--proxy-headers", "--no-server-header"]
+CMD ["uvicorn", "atlas_api.api.app:create_app", "--factory", "--host", "0.0.0.0", "--port", "8080", "--proxy-headers", "--no-server-header"]

@@ -5,9 +5,9 @@ from urllib.parse import parse_qs
 import httpx2
 import pytest
 
-from atlas_api.main import create_app
-from atlas_api.services.thoth import ASSERTION, Thoth
-from atlas_api.settings import Settings
+from atlas_api.api.app import create_app
+from atlas_api.clients.thoth import ASSERTION, Thoth
+from atlas_api.config import Settings
 
 ID = {"X-Authentik-Username": "akadmin"}
 APPS = [{"key": "kitsune", "status": "retained", "attributes": {}}, {"key": "echo", "status": "active"}]

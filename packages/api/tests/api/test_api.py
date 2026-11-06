@@ -5,10 +5,10 @@ from pathlib import Path
 
 import pytest
 
-from atlas_api.main import create_app
-from atlas_api.settings import Settings
+from atlas_api.api.app import create_app
+from atlas_api.config import Settings
 
-FIX = Path(__file__).parents[2] / "generator" / "tests" / "fixtures"
+FIX = Path(__file__).parents[3] / "generator" / "tests" / "fixtures"
 ID = {"X-Authentik-Username": "akadmin"}
 
 

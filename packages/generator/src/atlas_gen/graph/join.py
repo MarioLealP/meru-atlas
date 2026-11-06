@@ -4,7 +4,7 @@ from typing import Any
 
 from pydantic import BaseModel, ConfigDict, Field
 
-from atlas_gen.labels import safe_id
+from atlas_gen.graph.labels import safe_id
 from atlas_gen.parsers.caddy import Route
 from atlas_gen.parsers.compose import Container
 

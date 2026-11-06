@@ -1,10 +1,10 @@
 import json
 from pathlib import Path
 
-from atlas_gen import contracts
-from atlas_gen.build import build
+from atlas_gen.core import contracts
+from atlas_gen.graph.build import build
 
-REPO = Path(__file__).parent / "fixtures" / "infra"
+REPO = Path(__file__).parents[1] / "fixtures" / "infra"
 
 
 def graph():

@@ -2,13 +2,13 @@ import json
 import sqlite3
 from pathlib import Path
 
-from atlas_gen import contracts
-from atlas_gen.build import build
-from atlas_gen.cli import main
+from atlas_gen.__main__ import main
+from atlas_gen.core import contracts
 from atlas_gen.docs.build import build_docs, check, load
 from atlas_gen.docs.index import write_index
+from atlas_gen.graph.build import build
 
-INFRA = Path(__file__).parent / "fixtures" / "infra"
+INFRA = Path(__file__).parents[1] / "fixtures" / "infra"
 
 GOOD = {
     "server/web.md": """---

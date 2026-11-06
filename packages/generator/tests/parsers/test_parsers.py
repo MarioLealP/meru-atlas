@@ -2,7 +2,7 @@ from pathlib import Path
 
 from atlas_gen.parsers import authentik, caddy, cloudflared, compose
 
-REPO = Path(__file__).parent / "fixtures" / "infra"
+REPO = Path(__file__).parents[1] / "fixtures" / "infra"
 
 
 def test_compose_networks_and_default_names():

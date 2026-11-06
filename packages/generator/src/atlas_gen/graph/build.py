@@ -6,9 +6,9 @@ from typing import Any
 
 from pydantic import BaseModel, ConfigDict
 
-from atlas_gen import overlay as ov
-from atlas_gen.join import UNSORTED, Joined, join
-from atlas_gen.labels import login, version
+from atlas_gen.graph import overlay as ov
+from atlas_gen.graph.join import UNSORTED, Joined, join
+from atlas_gen.graph.labels import login, version
 from atlas_gen.parsers import authentik, caddy, cloudflared, compose
 from atlas_gen.parsers.authentik import SsoApp
 from atlas_gen.parsers.caddy import Route

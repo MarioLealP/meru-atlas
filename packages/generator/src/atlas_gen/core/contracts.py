@@ -17,7 +17,7 @@ def _schema_dir() -> Path:
     packaged = resources.files("atlas_gen") / "schemas"
     if packaged.is_dir():
         return Path(str(packaged))
-    return Path(__file__).resolve().parents[4] / "schemas"
+    return Path(__file__).resolve().parents[5] / "schemas"
 
 
 @cache

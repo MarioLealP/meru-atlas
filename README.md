@@ -48,7 +48,7 @@ npm run format:check && npm run check && npm run build
 # run locally (dev mode skips the SSO-identity check)
 ATLAS_DEV_MODE=true ATLAS_GRAPH_FILE=packages/generator/tests/fixtures/graph.min.json \
 ATLAS_STATUS_FILE=packages/generator/tests/fixtures/status.min.json \
-  uv run uvicorn atlas_api.main:create_app --factory --reload
+  uv run uvicorn atlas_api.api.app:create_app --factory --reload
 cd frontend && npm run dev   # proxies /api to :8000
 ```
 

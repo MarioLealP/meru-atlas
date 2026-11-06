@@ -1,4 +1,4 @@
-"""App factory. Run: uvicorn atlas_api.main:create_app --factory."""
+"""App factory. Run: uvicorn atlas_api.api.app:create_app --factory."""
 
 from collections.abc import AsyncGenerator
 from contextlib import asynccontextmanager
@@ -7,11 +7,11 @@ import httpx2
 import sentry_sdk
 from fastapi import FastAPI
 
-from atlas_api.routers import data, events, health, thoth, web
-from atlas_api.security import identity_guard
-from atlas_api.services.datafiles import DataFile
-from atlas_api.services.thoth import Thoth
-from atlas_api.settings import Settings
+from atlas_api.api import data, events, health, thoth, web
+from atlas_api.api.security import identity_guard
+from atlas_api.clients.thoth import Thoth
+from atlas_api.config import Settings
+from atlas_api.core.datafiles import DataFile
 
 # Crash reports to GlitchTip (D125): SENTRY_DSN comes from nuwa-app's glitchtip.dsn; unset, the SDK stays off.
 # No local variables or request bodies in a report - either can hold a secret.
