@@ -5,8 +5,8 @@ import logging
 from fastapi import APIRouter, HTTPException, Request
 from fastapi.responses import JSONResponse
 
-from atlas_api.security import NO_IDENTITY
-from atlas_api.services.thoth import AppStatus, ThothUnavailableError
+from atlas_api.api.security import NO_IDENTITY
+from atlas_api.clients.thoth import AppStatus, ThothUnavailableError
 
 router = APIRouter(prefix="/api/thoth")
 log = logging.getLogger(__name__)

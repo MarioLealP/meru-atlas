@@ -4,9 +4,9 @@ from pathlib import Path
 
 import pytest
 
-from atlas_gen import contracts
+from atlas_gen.core import contracts
 
-FIX = Path(__file__).parent / "fixtures"
+FIX = Path(__file__).parents[1] / "fixtures"
 
 
 def load(name: str):

@@ -1,7 +1,7 @@
 import pytest
 
-from atlas_api.main import create_app
-from atlas_api.settings import Settings
+from atlas_api.api.app import create_app
+from atlas_api.config import Settings
 
 ID = {"X-Authentik-Username": "akadmin"}
 

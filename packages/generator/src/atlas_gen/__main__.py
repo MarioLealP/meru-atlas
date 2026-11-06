@@ -11,10 +11,10 @@ import json
 import sys
 from pathlib import Path
 
-from atlas_gen import contracts
-from atlas_gen.build import build
+from atlas_gen.core import contracts
 from atlas_gen.docs.build import build_docs, check, load
 from atlas_gen.docs.index import write_index
+from atlas_gen.graph.build import build
 
 
 def main(argv: list[str] | None = None) -> int:

@@ -12,7 +12,7 @@ from collections.abc import AsyncIterator
 from fastapi import APIRouter, Request
 from fastapi.responses import StreamingResponse
 
-from atlas_api.security import NO_IDENTITY
+from atlas_api.api.security import NO_IDENTITY
 
 router = APIRouter(prefix="/api")
 

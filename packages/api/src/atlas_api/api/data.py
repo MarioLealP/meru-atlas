@@ -3,8 +3,8 @@
 from fastapi import APIRouter, HTTPException, Request
 from fastapi.responses import JSONResponse
 
-from atlas_api.security import NO_IDENTITY
-from atlas_api.services.datafiles import DataUnavailableError
+from atlas_api.api.security import NO_IDENTITY
+from atlas_api.core.datafiles import DataUnavailableError
 
 router = APIRouter(prefix="/api")
 ERRORS = NO_IDENTITY | {503: {"description": "The file is missing or fails its schema"}}

@@ -10,7 +10,7 @@ from typing import Any
 
 from pydantic import BaseModel, ConfigDict, PrivateAttr
 
-from atlas_gen import contracts
+from atlas_gen.core import contracts
 
 
 class DataUnavailableError(RuntimeError):
