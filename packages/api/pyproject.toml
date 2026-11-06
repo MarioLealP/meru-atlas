@@ -3,7 +3,14 @@ name = "atlas-api"
 version = "0.1.0"
 description = "Read-only API for the clockmost atlas (serves graph, live status, SSE)"
 requires-python = ">=3.15"
-dependencies = ["fastapi>=0.142", "uvicorn>=0.54", "pydantic-settings>=2.15", "httpx2>=2.16.0", "atlas-gen"]
+dependencies = [
+    "fastapi>=0.142",
+    "uvicorn>=0.54",
+    "pydantic-settings>=2.15",
+    "httpx2>=2.16.0",
+    "atlas-gen",
+    "sentry-sdk>=2.74.0",
+]
 
 [build-system]
 requires = ["uv_build>=0.12,<0.13"]

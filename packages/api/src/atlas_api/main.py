@@ -4,6 +4,7 @@ from collections.abc import AsyncGenerator
 from contextlib import asynccontextmanager
 
 import httpx2
+import sentry_sdk
 from fastapi import FastAPI
 
 from atlas_api.routers import data, events, health, thoth, web
@@ -11,6 +12,10 @@ from atlas_api.security import identity_guard
 from atlas_api.services.datafiles import DataFile
 from atlas_api.services.thoth import Thoth
 from atlas_api.settings import Settings
+
+# Crash reports to GlitchTip (D125): SENTRY_DSN comes from nuwa-app's glitchtip.dsn; unset, the SDK stays off.
+# No local variables or request bodies in a report - either can hold a secret.
+sentry_sdk.init(include_local_variables=False, max_request_body_size="never")
 
 
 def create_app(settings: Settings | None = None) -> FastAPI:
