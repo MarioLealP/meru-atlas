@@ -34,7 +34,12 @@ configMaps:
 # into the cluster (D24) the Docker range goes for their namespaces.
 networkPolicy:
   enabled: true
+  hostAddresses: [10.42.0.1/32] # the node: the kubelet's probes and Caddy on the host (no Docker range any more)
   fromNamespaces: []
+  egress: none
+  toNamespaces: [thoth] # the CMDB (Thoth's policy lets atlas in)
+  toAddresses:
+    - { cidr: 192.168.10.110/32, ports: [443] } # Caddy: Authentik's token endpoint, GlitchTip
 # Its one credential (D92): a read-only Thoth login with its own Kubernetes token (D104) - Authentik grants
 # atlas/atlas thoth.read in a protected blueprint (infra thoth.yaml). Nothing stored anywhere.
 authentikLogin:
