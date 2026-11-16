@@ -7,6 +7,7 @@ describe("toneOf", () => {
     expect(toneOf("planned")).toBe("warn");
     expect(toneOf("missing")).toBe("crit");
     expect(toneOf("retained")).toBe("quiet");
+    expect(toneOf("stopped")).toBe("quiet");
   });
   it("keeps a status it doesn't know quiet", () => {
     expect(toneOf("hibernating")).toBe("quiet");
